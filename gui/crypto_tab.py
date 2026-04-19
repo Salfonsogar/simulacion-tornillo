@@ -4,7 +4,7 @@ import numpy as np
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QPushButton, 
     QSlider, QGroupBox, QCheckBox, QFrame, QSizePolicy, QLineEdit, 
-    QComboBox, QTextEdit, QScrollArea
+    QComboBox, QTextEdit, QScrollArea, QButtonGroup, QRadioButton
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSize
 from PyQt6.QtGui import QColor, QPainter, QBrush, QPen, QFont
@@ -39,22 +39,22 @@ class CryptoTab(QWidget):
         """Configura la interfaz."""
         self.setStyleSheet(""" 
             QWidget { font-family: 'Segoe UI', sans-serif; } 
-            QLabel { color: #555555; font-size: 12px; } 
+            QLabel { color: #000000; font-size: 12px; } 
             QLabel titulo { color: #0078D4; font-size: 20px; font-weight: bold; } 
-            QLabel subtitulo { color: #00ACC1; font-size: 14px; font-weight: bold; } 
-            QLabel info { color: #888888; font-size: 11px; } 
+            QLabel subtitulo { color: #0088CC; font-size: 14px; font-weight: bold; } 
+            QLabel info { color: #666666; font-size: 11px; } 
             QLabel titulo_seccion { color: #0078D4; font-size: 13px; font-weight: bold; } 
             QPushButton { background-color: #0078D4; color: #FFFFFF; border: none; border-radius: 6px; padding: 8px 16px; font-size: 12px; font-weight: bold; } 
             QPushButton:hover { background-color: #106EBE; } 
             QPushButton:pressed { background-color: #005A9E; } 
             QPushButton:disabled { background-color: #CCCCCC; } 
-            QGroupBox { border: 1px solid #444444; border-radius: 8px; margin-top: 12px; padding-top: 12px; color: #555555; } 
+            QGroupBox { border: 1px solid #444444; border-radius: 8px; margin-top: 12px; padding-top: 12px; color: #000000; } 
             QGroupBox::title { subcontrol-origin: margin; subcontrol-position: top left; padding: 0 8px; color: #0078D4; font-weight: bold; } 
-            QLineEdit, QTextEdit { border: 1px solid #444444; border-radius: 4px; padding: 6px; background-color: #FFFFFF; color: #555555; font-size: 12px; } 
+            QLineEdit, QTextEdit { border: 1px solid #444444; border-radius: 4px; padding: 6px; background-color: #FFFFFF; color: #000000; font-size: 12px; } 
             QLineEdit:focus, QTextEdit:focus { border: 2px solid #0078D4; } 
             QSlider::groove:horizontal { background: #E0E0E0; height: 8px; border-radius: 4px; } 
             QSlider::handle:horizontal { background: #0078D4; width: 18px; margin: -5px 0; border-radius: 9px; } 
-            QCheckBox { color: #555555; font-size: 12px; } 
+            QCheckBox, QRadioButton { color: #000000; font-size: 12px; } 
         """)
         
         layout_principal = QVBoxLayout()
@@ -103,13 +103,27 @@ class CryptoTab(QWidget):
         layout = QHBoxLayout()
         layout.setSpacing(20)
         
-        self._toggle_modo = QCheckBox("Modo Texto")
-        self._toggle_modo.setStyleSheet(""" 
-            QCheckBox { font-weight: bold; } 
-            QCheckBox::indicator { width: 18px; height: 18px; } 
+        self._group_modo = QButtonGroup()
+        
+        self._btn_modo_fuerza = QRadioButton("Fuerza")
+        self._btn_modo_fuerza.setChecked(True)
+        self._btn_modo_fuerza.setStyleSheet("""
+            QRadioButton { font-weight: bold; padding: 4px 12px; }
+            QRadioButton::indicator { width: 16px; height: 16px; }
         """)
-        self._toggle_modo.stateChanged.connect(self._on_cambiar_modo)
-        layout.addWidget(self._toggle_modo)
+        
+        self._btn_modo_texto = QRadioButton("Texto")
+        self._btn_modo_texto.setStyleSheet("""
+            QRadioButton { font-weight: bold; padding: 4px 12px; }
+            QRadioButton::indicator { width: 16px; height: 16px; }
+        """)
+        
+        self._group_modo.addButton(self._btn_modo_fuerza)
+        self._group_modo.addButton(self._btn_modo_texto)
+        self._group_modo.buttonClicked.connect(self._on_cambiar_modo)
+        
+        layout.addWidget(self._btn_modo_fuerza)
+        layout.addWidget(self._btn_modo_texto)
         layout.addWidget(QLabel("Entrada:"))
         
         self._panel_fuerza = QWidget()
@@ -151,7 +165,7 @@ class CryptoTab(QWidget):
         self._panel_texto.hide()
         layout.addWidget(self._panel_texto)
         
-        layout.addStretch()
+        layout.addStretch(1)
         frame.setLayout(layout)
         
         return frame
@@ -178,6 +192,10 @@ class CryptoTab(QWidget):
         self._label_vm = QLabel("15.71")
         self._label_vm.setStyleSheet("color: #0078D4; font-weight: bold; font-size: 14px;")
         layout.addWidget(self._label_vm, 2, 1)
+        
+        self._label_formula = QLabel("VM = (2π × r) / L = —")
+        self._label_formula.setStyleSheet("color: #00ACC1; font-size: 11px; font-style: italic;")
+        layout.addWidget(self._label_formula, 2, 2)
         
         layout.addWidget(QLabel("Giros:"), 3, 0)
         self._slider_giros = QSlider(Qt.Orientation.Horizontal)
@@ -247,10 +265,10 @@ class CryptoTab(QWidget):
         self._canvas_transform_widget.draw()
 
     def _dibujar_tornillo(self, angulo, estado="procesando"):
-        """Dibuja el tornillo."""
+        """Dibuja el tornillo con visualización mejorada."""
         self._ax_transform.clear()
-        self._ax_transform.set_xlim(-1.2, 1.2)
-        self._ax_transform.set_ylim(-0.8, 0.8)
+        self._ax_transform.set_xlim(-1.3, 1.3)
+        self._ax_transform.set_ylim(-0.9, 0.9)
         self._ax_transform.set_facecolor('#FAFAFA')
         
         if estado == "cifrado":
@@ -270,21 +288,36 @@ class CryptoTab(QWidget):
         self._ax_transform.axis('off')
         
         color_tornillo = "#0078D4"
-        color_hilo = "#005A9E"
+        color_hilo = "#FF8C00"
         
-        for i in range(4):
-            y_base = -0.5 + i * 0.35
-            theta = np.linspace(0, 2 * np.pi, 40)
-            x = 0.25 * np.cos(theta + angulo + i * 0.8)
-            y = y_base + 0.08 * np.sin(theta + i * 0.5)
-            self._ax_transform.plot(x, y, color=color_hilo, linewidth=2, alpha=0.8)
-            
-        self._ax_transform.plot([-0.35, 0.35], [0.6, 0.6], color='#333333', linewidth=3)
-        self._ax_transform.plot([0], [0.6], marker='o', markersize=8, color='#333333')
-        self._ax_transform.annotate('', xy=(0.5, 0.1), xytext=(-0.5, 0.1), arrowprops=dict(arrowstyle='->', color='#E65100', lw=2))
-        self._ax_transform.text(0, 0.2, 'Input', color='#E65100', fontsize=9, ha='center')
-        self._ax_transform.annotate('', xy=(0, -0.3), xytext=(0, -0.6), arrowprops=dict(arrowstyle='->', color='#00ACC1', lw=2))
-        self._ax_transform.text(0.35, -0.45, 'VM', color='#00ACC1', fontsize=9, ha='center')
+        x_helice = np.linspace(-0.8, 0.8, 100)
+        avance = 1.5 * angulo / (2 * np.pi)
+        
+        for i in range(2):
+            y_helice = -(avance + i * 0.4) - 0.1 * np.sin(2 * np.pi * (x_helice + angulo * 0.5) / 0.4 + i * np.pi)
+            mask = (y_helice > -0.7) & (y_helice < 0.7)
+            self._ax_transform.plot(x_helice[mask], y_helice[mask], color=color_hilo, linewidth=2.5, alpha=0.9)
+        
+        cuerpo_y = np.linspace(-0.6 - avance, 0.6 - avance)
+        self._ax_transform.plot([0]*len(cuerpo_y), cuerpo_y, color='#555555', linewidth=8, alpha=0.3)
+        
+        self._ax_transform.plot([0], [0.55 - avance], marker='o', markersize=12, color='#333333', markeredgecolor='#555555')
+        
+        for nivel in [-0.4, 0, 0.4]:
+            y_pos = nivel - avance
+            if -0.6 < y_pos < 0.6:
+                self._ax_transform.plot([-0.3, 0.3], [y_pos, y_pos], color='#CCCCCC', linewidth=1, linestyle='--', alpha=0.5)
+        
+        self._ax_transform.annotate('', xy=(0.9, -0.3 + avance), xytext=(-0.9, -0.3 + avance), 
+                                   arrowprops=dict(arrowstyle='<->', color='#E65100', lw=2))
+        self._ax_transform.text(0, -0.35 + avance, 'F_input', color='#E65100', fontsize=10, ha='center', fontweight='bold')
+        
+        self._ax_transform.annotate('', xy=(0.9, 0.5 - avance), xytext=(0.9, -0.5 - avance), 
+                                   arrowprops=dict(arrowstyle='->', color='#00ACC1', lw=2))
+        self._ax_transform.text(1.05, -avance, 'F_output', color='#00ACC1', fontsize=10, ha='center', fontweight='bold')
+        
+        self._ax_transform.text(0.5, -0.85, f'θ={angulo/((2*np.pi)/20):.0f}°', color='#666666', fontsize=9, ha='center')
+        
         self._canvas_transform_widget.draw()
 
     def _crear_panel_resultado(self) -> QWidget:
@@ -302,9 +335,14 @@ class CryptoTab(QWidget):
         layout.addWidget(self._label_resultado)
         
         self._label_estado = QLabel("Esperando...")
-        self._label_estado.setStyleSheet("color: #888888; font-style: italic;")
+        self._label_estado.setStyleSheet("color: #000000; font-style: italic;")
         self._label_estado.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._label_estado)
+        
+        self._label_interpretacion = QLabel("")
+        self._label_interpretacion.setStyleSheet("color: #0088CC; font-size: 11px; font-style: italic;")
+        self._label_interpretacion.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self._label_interpretacion)
         
         layout.addStretch()
         grupo.setLayout(layout)
@@ -319,15 +357,19 @@ class CryptoTab(QWidget):
         self._text_bloque.setReadOnly(True)
         self._text_bloque.setMaximumHeight(80)
         self._text_bloque.setStyleSheet(""" 
-            background-color: #1E1E1E; color: #00FF00; font-family: 'Consolas', monospace; font-size: 11px; 
+            background-color: #F8F8F8; color: #000000; font-family: 'Consolas', monospace; font-size: 11px; border: 1px solid #CCCCCC;
         """)
-        self._text_bloque.setPlainText("┌──────────────────────┐\n│ 00 00 00 00 00 00... │\n└──────────────────────┘")
+        self._text_bloque.setPlainText("Bloque vacío\n00 00 00 00 00 00 00 00 ...")
         layout.addWidget(self._text_bloque)
         
-        layout.addWidget(QLabel("Rondas aplicadas:"))
+        layout.addWidget(QLabel("Rondas:"))
         self._label_rondas = QLabel("0")
         self._label_rondas.setStyleSheet("color: #0078D4; font-weight: bold;")
         layout.addWidget(self._label_rondas)
+        
+        self._label_rondas_detalle = QLabel("")
+        self._label_rondas_detalle.setStyleSheet("color: #000000; font-size: 11px;")
+        layout.addWidget(self._label_rondas_detalle)
         
         grupo.setLayout(layout)
         return grupo
@@ -344,16 +386,16 @@ class CryptoTab(QWidget):
         layout.addWidget(self._label_mensaje, 0, 1)
         
         self._label_info = QLabel("")
-        self._label_info.setStyleSheet("color: #888888;")
+        self._label_info.setStyleSheet("color: #000000;")
         layout.addWidget(QLabel("Info:"), 1, 0)
         layout.addWidget(self._label_info, 1, 1)
         
         grupo.setLayout(layout)
         return grupo
 
-    def _on_cambiar_modo(self, checked: int):
+    def _on_cambiar_modo(self, button: QRadioButton):
         """Cambia entre modo fuerza y texto."""
-        if checked:
+        if button == self._btn_modo_texto:
             self._modo = "texto"
         else:
             self._modo = "fuerza"
@@ -374,8 +416,10 @@ class CryptoTab(QWidget):
             paso = float(self._edit_paso.text())
             vm = ScrewCipher.calcular_vm(radio, paso)
             self._label_vm.setText(f"{vm:.2f}")
+            self._label_formula.setText(f"VM = (2π × {radio}) / {paso} = {vm:.2f}")
         except:
             self._label_vm.setText("—")
+            self._label_formula.setText("VM = (2π × r) / L = —")
 
     def _actualizar_presentacion(self):
         """Actualiza la presentación inicial."""
@@ -462,10 +506,18 @@ class CryptoTab(QWidget):
         bloque = ScrewCipher.generar_bloque_visual(self._resultado_hex, 16)
         self._text_bloque.setPlainText(ScrewCipher.formatear_bloque_hex(bloque))
         
-        self._label_rondas.setText(str(self._rondas))
+        self._label_rondas.setText(f"{self._rondas}")
+        self._label_rondas_detalle.setText(f"({self._crypto_state.num_giros}giros × 10)")
+        
         self._label_mensaje.setText("Cifrado exitoso")
         self._label_mensaje.setStyleSheet("color: #28A745; font-weight: bold;")
-        self._label_info.setText(f"VM={self._crypto_state.vm:.2f}, Giros={self._crypto_state.num_giros}")
+        
+        detalle_vm = f"VM={self._crypto_state.vm:.2f}, Giros={self._crypto_state.num_giros}"
+        self._label_info.setText(detalle_vm)
+        
+        self._label_interpretacion.setText(
+            f"F_salida = {self._crypto_state.vm:.1f}x F_entrada"
+        )
         
         self._btn_cifrar.setText("Cifrar")
         self._btn_cifrar.setEnabled(True)
@@ -496,8 +548,10 @@ class CryptoTab(QWidget):
             self._dibujar_tornillo(0, "descifrado")
             self._label_estado.setText("✓ DESCIFRADO")
             self._label_estado.setStyleSheet("color: #17A2B8; font-weight: bold;")
-            self._label_mensaje.setText("Descifrado exitoso")
+            self._label_mensaje.setText("Descifrado exitoso (misma clave)")
             self._label_mensaje.setStyleSheet("color: #17A2B8; font-weight: bold;")
+            self._label_info.setText(f"Clave: VM={vm:.2f}, L={self._crypto_state.paso}m")
+            self._label_interpretacion.setText("Requiere misma (r, L) = misma llave")
             self._btn_descifrar.setEnabled(False)
             
         except CryptoError as e:
@@ -511,9 +565,10 @@ class CryptoTab(QWidget):
         self._estado_animacion = 0
         self._label_resultado.setText("—")
         self._label_estado.setText("Esperando...")
-        self._label_estado.setStyleSheet("color: #666666;")
-        self._text_bloque.setPlainText("┌──────────────────────┐\n│ 00 00 00 00 00 00... │\n└──────────────────────┘")
+        self._label_estado.setStyleSheet("color: #000000;")
+        self._text_bloque.setPlainText("Bloque vacío\n00 00 00 00 00 00 00 00 ...")
         self._label_rondas.setText("0")
+        self._label_rondas_detalle.setText("")
         self._label_mensaje.setText("Listo")
         self._label_mensaje.setStyleSheet("color: #28A745; font-weight: bold;")
         self._label_info.setText("")

@@ -17,9 +17,8 @@ import sys
 
 from PyQt6.QtWidgets import (QMainWindow, QTabWidget, QMessageBox,
                             QApplication, QLabel, QStatusBar, QSizePolicy)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QScreen
-from PyQt6.QtGui import QIcon, QKeyEvent
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QScreen, QIcon, QKeyEvent, QPixmap, QPainter, QColor
 
 
 class ScrewSimulatorWindow(QMainWindow):
@@ -56,35 +55,41 @@ class ScrewSimulatorWindow(QMainWindow):
         """Aplica el estilo visual claro."""
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #F5F5F5;
-            }
-            QWidget {
-                background-color: #F5F5F5;
-            }
-            QTabWidget::pane {
-                border: 2px solid #0078D4;
-                border-radius: 8px;
                 background-color: #FFFFFF;
             }
+            QWidget {
+                background-color: #FFFFFF;
+            }
+            QTabWidget::pane {
+                border: none;
+                border-top: 2px solid #E0E0E0;
+                background-color: #FFFFFF;
+            }
+            QTabBar {
+                background-color: #FFFFFF;
+                border: none;
+            }
             QTabBar::tab {
-                background-color: #E1E1E1;
-                color: #333333;
-                padding: 12px 24px;
-                margin: 4px;
-                border-radius: 6px 6px 0 0;
-                font-size: 13px;
-                font-weight: bold;
+                background-color: transparent;
+                color: #666666;
+                padding: 12px 20px;
+                margin: 0px;
+                border: none;
+                border-bottom: 3px solid transparent;
+                font-size: 14px;
+                font-weight: 500;
             }
             QTabBar::tab:selected {
-                background-color: #0078D4;
-                color: #FFFFFF;
+                background-color: transparent;
+                color: #0078D4;
+                border-bottom: 3px solid #0078D4;
             }
             QTabBar::tab:hover:!selected {
-                background-color: #D0D0D0;
-                color: #000000;
+                background-color: #F5F5F5;
+                color: #333333;
             }
             QStatusBar {
-                background-color: #E1E1E1;
+                background-color: #F5F5F5;
                 color: #333333;
             }
             QMessageBox {
@@ -129,6 +134,16 @@ class ScrewSimulatorWindow(QMainWindow):
         # Establecer en ventana central
         self.setCentralWidget(self.tabs)
 
+        self.tabs.setIconSize(QSize(18, 18))
+        
+        icon_calc = self._crear_icono("#0078D4", "calc")
+        icon_sim = self._crear_icono("#28A745", "sim")
+        icon_crypto = self._crear_icono("#FF6B00", "crypto")
+        
+        self.tabs.setTabIcon(0, icon_calc)
+        self.tabs.setTabIcon(1, icon_sim)
+        self.tabs.setTabIcon(2, icon_crypto)
+
         # Conectar señales entre pestañas (para sincronización)
         self.calc_tab.calculo_realizado.connect(self._on_calculo_externo)
 
@@ -137,6 +152,32 @@ class ScrewSimulatorWindow(QMainWindow):
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Listo. Ingrese valores en la Calculadora.")
+
+    def _crear_icono(self, color: str, forma: str) -> QIcon:
+        """Crea un icono simple."""
+        from PyQt6.QtCore import QPoint
+        
+        pixmap = QPixmap(20, 20)
+        pixmap.fill(QColor("transparent"))
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(QColor(color))
+        painter.setBrush(QColor(color))
+        
+        if forma == "calc":
+            painter.drawRect(4, 4, 12, 12)
+            painter.setPen(QColor("#FFFFFF"))
+            painter.drawLine(7, 8, 13, 8)
+            painter.drawLine(7, 12, 11, 12)
+        elif forma == "sim":
+            painter.drawEllipse(4, 4, 12, 12)
+            painter.setPen(QColor("#FFFFFF"))
+            painter.drawLine(10, 4, 10, 16)
+        elif forma == "crypto":
+            painter.drawConvexPolygon(QPoint(10, 3), QPoint(17, 10), QPoint(10, 17), QPoint(3, 10))
+        
+        painter.end()
+        return QIcon(pixmap)
 
     def _on_calculo_externo(self, resultados):
         """Maneja cálculos desde la pestaña de calculadora."""

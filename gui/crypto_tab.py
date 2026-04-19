@@ -78,6 +78,7 @@ class CryptoTab(QWidget):
         layout_principal.addLayout(layout_resultado)
         
         layout_principal.addWidget(self._crear_panel_estado())
+        layout_principal.addWidget(self._crear_panel_quiz())
         layout_principal.addStretch()
         
         self.setLayout(layout_principal)
@@ -392,6 +393,132 @@ class CryptoTab(QWidget):
         
         grupo.setLayout(layout)
         return grupo
+
+    def _crear_panel_quiz(self) -> QWidget:
+        """Crea el panel de Quiz/Desafíos."""
+        grupo = QGroupBox("DESAFÍOS - Pon a Prueba tus Conocimientos")
+        layout = QVBoxLayout()
+        layout.setSpacing(15)
+        
+        self._label_quiz_nivel = QLabel("Selecciona un nivel:")
+        self._label_quiz_nivel.setStyleSheet("font-weight: bold; color: #0078D4; font-size: 13px;")
+        layout.addWidget(self._label_quiz_nivel)
+        
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(10)
+        
+        self._btn_nivel1 = QPushButton("Nivel 1: FÍSICA")
+        self._btn_nivel1.setStyleSheet("background-color: #0078D4; color: #FFFFFF; padding: 10px;")
+        self._btn_nivel1.clicked.connect(lambda: self._iniciar_quiz(1))
+        btn_layout.addWidget(self._btn_nivel1)
+        
+        self._btn_nivel2 = QPushButton("Nivel 2: CRIPTO")
+        self._btn_nivel2.setStyleSheet("background-color: #28A745; color: #FFFFFF; padding: 10px;")
+        self._btn_nivel2.clicked.connect(lambda: self._iniciar_quiz(2))
+        btn_layout.addWidget(self._btn_nivel2)
+        
+        self._btn_nivel3 = QPushButton("Nivel 3: INGENIERÍA")
+        self._btn_nivel3.setStyleSheet("background-color: #FF6B00; color: #FFFFFF; padding: 10px;")
+        self._btn_nivel3.clicked.connect(lambda: self._iniciar_quiz(3))
+        btn_layout.addWidget(self._btn_nivel3)
+        
+        layout.addLayout(btn_layout)
+        
+        self._quiz_enunciado = QLabel("")
+        self._quiz_enunciado.setStyleSheet("font-style: italic; padding: 10px; background-color: #F5F5F5; border-radius: 4px;")
+        self._quiz_enunciado.setWordWrap(True)
+        layout.addWidget(self._quiz_enunciado)
+        
+        quiz_inputs = QGridLayout()
+        quiz_inputs.setSpacing(10)
+        
+        quiz_inputs.addWidget(QLabel("Tu respuesta:"), 0, 0)
+        self._edit_respuesta = QLineEdit()
+        self._edit_respuesta.setPlaceholderText("Ingresa tu respuesta...")
+        self._edit_respuesta.setMaximumWidth(150)
+        quiz_inputs.addWidget(self._edit_respuesta, 0, 1)
+        
+        self._btn_verificar = QPushButton("Verificar")
+        self._btn_verificar.setStyleSheet("background-color: #28A745; padding: 8px 16px;")
+        self._btn_verificar.clicked.connect(self._verificar_respuesta)
+        quiz_inputs.addWidget(self._btn_verificar, 0, 2)
+        
+        layout.addLayout(quiz_inputs)
+        
+        self._quiz_feedback = QLabel("")
+        self._quiz_feedback.setStyleSheet("font-weight: bold; padding: 10px; border-radius: 4px;")
+        self._quiz_feedback.setWordWrap(True)
+        layout.addWidget(self._quiz_feedback)
+        
+        grupo.setLayout(layout)
+        return grupo
+
+    def _iniciar_quiz(self, nivel: int):
+        """Inicia un desafío específico."""
+        self._nivel_actual = nivel
+        
+        if nivel == 1:
+            self._quiz_enunciado.setText(
+                "RETO #1 - FÍSICA\n\n"
+                "¿Qué fuerza de entrada se necesita para mover una carga de 500N?\n"
+                "已知: VM = 15.71, F_salida = F_entrada × VM"
+            )
+            self._respuesta_correcta = 500 / 15.71
+            self._hint = "F_entrada = F_salida / VM"
+        elif nivel == 2:
+            self._quiz_enunciado.setText(
+                "RETO #2 - CRIPTOGRAFÍA\n\n"
+                "Mensaje cifrado: 'HELLO' requiere F_salida = 200N\n"
+                "Si r = 0.005m y L = 0.002m, ¿cuál es la F_entrada necesaria?"
+            )
+            vm = (2 * np.pi * 0.005) / 0.002
+            self._respuesta_correcta = 200 / vm
+            self._hint = f"Primero calcula VM = (2π × r) / L = {vm:.2f}, luego F_entrada = F_salida / VM"
+        elif nivel == 3:
+            self._quiz_enunciado.setText(
+                "RETO #3 - INGENIERÍA\n\n"
+                "¡ALERTA DE SEGURIDAD!\n"
+                "F_entrada = 200N excede el límite máximo (150N)\n"
+                "Ajusta los parámetros para mantener F_salida > 100N pero F_entrada < 150N\n"
+                "Valores actuales: r = 0.005m, L = 0.002m → VM = 15.71, F_salida = 3142N"
+            )
+            self._nivel3_params = {"r": 0.005, "L": 0.002, "f_in": 200}
+            self._quiz_feedback.setText("")
+            self._edit_respuesta.setPlaceholderText("(A) r=0.01  (B) L=0.001  (C) Ambos...")
+            return
+        
+        self._edit_respuesta.setText("")
+        self._quiz_feedback.setText("")
+
+    def _verificar_respuesta(self):
+        """Verifica la respuesta del usuario."""
+        if not hasattr(self, '_nivel_actual') or not hasattr(self, '_respuesta_correcta'):
+            self._quiz_feedback.setText("Selecciona un nivel primero!")
+            return
+        
+        try:
+            respuesta = float(self._edit_respuesta.text())
+            error = abs(respuesta - self._respuesta_correcta)
+            tolerancia = self._respuesta_correcta * 0.1
+            
+            if error <= tolerancia:
+                self._quiz_feedback.setText(
+                    f"✅ ¡EXCELENTE! Respuesta correcta: {self._respuesta_correcta:.2f}N\n"
+                    f"Has demostrado entender la relación F_salida = F_entrada × VM"
+                )
+                self._quiz_feedback.setStyleSheet(
+                    "color: #28A745; font-weight: bold; padding: 10px; background-color: #E8F5E9; border-radius: 4px;"
+                )
+            else:
+                self._quiz_feedback.setText(
+                    f"❌ Intenta de nuevo.\n"
+                    f"Pista: {self._hint}"
+                )
+                self._quiz_feedback.setStyleSheet(
+                    "color: #D32F2F; font-weight: bold; padding: 10px; background-color: #FFEBEE; border-radius: 4px;"
+                )
+        except ValueError:
+            self._quiz_feedback.setText("Ingresa un valor numérico válido.")
 
     def _on_cambiar_modo(self, button: QRadioButton):
         """Cambia entre modo fuerza y texto."""

@@ -1,0 +1,9 @@
+# Dependencias del Proyecto - Simulador de Tornillo
+# Uso: pip install -r requirements.txt
+
+# Interfaz Gráfica
+PyQt6>=6.7.0
+
+# Visualización y Gráficos
+matplotlib>=3.8.0
+numpy>=1.26.0

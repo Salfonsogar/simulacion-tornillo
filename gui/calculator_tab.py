@@ -18,11 +18,14 @@ Fecha: 2026
 
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                             QLabel, QLineEdit, QPushButton, QGroupBox,
-                            QMessageBox)
-from PyQt6.QtCore import Qt, pyqtSignal
+                            QMessageBox, QSizePolicy)
+from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QColor, QPalette
 
 import math
+import numpy as np
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
 
 
 class CalculatorTab(QWidget):
@@ -130,13 +133,23 @@ class CalculatorTab(QWidget):
         layout_principal.setSpacing(15)
         layout_principal.setContentsMargins(20, 20, 20, 20)
 
+        # Panel DCL (diagrama de cuerpo libre)
+        panel_dcl = self._crear_panel_dcl()
+        layout_principal.addWidget(panel_dcl)
+
+        # Layout horizontal para entrada y resultados
+        layout_horizontal = QHBoxLayout()
+        layout_horizontal.setSpacing(15)
+
         # Grupo de Entrada
         grupo_entrada = self._crear_grupo_entrada()
-        layout_principal.addWidget(grupo_entrada)
+        layout_horizontal.addWidget(grupo_entrada)
 
         # Grupo de Resultados
         grupo_resultados = self._crear_grupo_resultados()
-        layout_principal.addWidget(grupo_resultados)
+        layout_horizontal.addWidget(grupo_resultados)
+
+        layout_principal.addLayout(layout_horizontal)
 
         # Botones
         botones = self._crear_botones()
@@ -146,6 +159,120 @@ class CalculatorTab(QWidget):
         layout_principal.addStretch()
 
         self.setLayout(layout_principal)
+
+    def _crear_panel_dcl(self) -> QGroupBox:
+        """Crea el panel de Diagrama de Cuerpo Libre (DCL)."""
+        grupo = QGroupBox("Diagrama de Cuerpo Libre (DCL)")
+        layout = QVBoxLayout()
+        
+        self.fig_dcl = Figure(figsize=(5, 3), facecolor='#FFFFFF')
+        self.ax_dcl = self.fig_dcl.add_subplot(111)
+        self.ax_dcl.set_facecolor('#FFFFFF')
+        
+        self.canvas_dcl = FigureCanvasQTAgg(self.fig_dcl)
+        self.canvas_dcl.setMinimumSize(400, 200)
+        self.canvas_dcl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        
+        layout.addWidget(self.canvas_dcl)
+        
+        self._inicializar_dcl()
+        
+        grupo.setLayout(layout)
+        return grupo
+
+    def _inicializar_dcl(self):
+        """Inicializa el DCL."""
+        self.ax_dcl.clear()
+        self.ax_dcl.set_xlim(-2.5, 2.5)
+        self.ax_dcl.set_ylim(-1.5, 2.5)
+        self.ax_dcl.set_aspect('equal')
+        self.ax_dcl.axis('off')
+        
+        self.ax_dcl.set_title('DCL - Fuerzas sobre el Tornillo', color='#0078D4', fontsize=12)
+        
+        radio = 0.5
+        theta = np.linspace(0, 2*np.pi, 20)
+        x_engrane = radio * np.cos(theta)
+        y_engrane = radio * np.sin(theta)
+        self.ax_dcl.fill(x_engrane, y_engrane, color='#CCCCCC', edgecolor='#666666', linewidth=2, alpha=0.5)
+        
+        for i in range(8):
+            angle = i * np.pi / 4
+            x_diente = (radio + 0.1) * np.cos(angle)
+            y_diente = (radio + 0.1) * np.sin(angle)
+            self.ax_dcl.plot([radio * np.cos(angle), x_diente], [radio * np.sin(angle), y_diente], 
+                         color='#666666', linewidth=2)
+        
+        self.ax_dcl.annotate('', xy=(-1.5, 0), xytext=(-0.6, 0),
+                       arrowprops=dict(arrowstyle='->', color='#0078D4', lw=3))
+        self.ax_dcl.text(-1.8, -0.2, 'F_entrada', color='#0078D4', fontsize=10, fontweight='bold')
+        
+        self.ax_dcl.annotate('', xy=(0, 1.8), xytext=(0, 0.6),
+                       arrowprops=dict(arrowstyle='->', color='#28A745', lw=3))
+        self.ax_dcl.text(0.2, 1.2, 'F_salida', color='#28A745', fontsize=10, fontweight='bold')
+        
+        theta_arrow = np.linspace(0, np.pi/2, 15)
+        x_arc = 0.7 * np.cos(theta_arrow)
+        y_arc = 0.7 * np.sin(theta_arrow)
+        self.ax_dcl.plot(x_arc, y_arc, color='#FF6B00', lw=2)
+        self.ax_dcl.annotate('', xy=(0.5, 0.5), xytext=(0.6, 0.3),
+                         arrowprops=dict(arrowstyle='->', color='#FF6B00', lw=2))
+        self.ax_dcl.text(0.55, 0.65, 'τ', color='#FF6B00', fontsize=12, fontweight='bold')
+        
+        self.ax_dcl.text(-2.3, -1.0, 'F_in: 10N', color='#0078D4', fontsize=9)
+        self.ax_dcl.text(-2.3, -1.2, 'F_out: 157N', color='#28A745', fontsize=9)
+        self.ax_dcl.text(-2.3, -1.4, 'τ: 0.5Nm', color='#FF6B00', fontsize=9)
+        
+        self.canvas_dcl.draw()
+
+    def _actualizar_dcl(self, f_entrada, f_salida, radio, vm):
+        """Actualiza el DCL con nuevos valores."""
+        self.ax_dcl.clear()
+        self.ax_dcl.set_xlim(-2.5, 2.5)
+        self.ax_dcl.set_ylim(-1.5, 2.5)
+        self.ax_dcl.set_aspect('equal')
+        self.ax_dcl.axis('off')
+        
+        self.ax_dcl.set_title('DCL - Fuerzas sobre el Tornillo', color='#0078D4', fontsize=12)
+        
+        r_engrane = 0.5
+        theta = np.linspace(0, 2*np.pi, 20)
+        x_engrane = r_engrane * np.cos(theta)
+        y_engrane = r_engrane * np.sin(theta)
+        self.ax_dcl.fill(x_engrane, y_engrane, color='#CCCCCC', edgecolor='#666666', linewidth=2, alpha=0.5)
+        
+        for i in range(8):
+            angle = i * np.pi / 4
+            x_diente = (r_engrane + 0.1) * np.cos(angle)
+            y_diente = (r_engrane + 0.1) * np.sin(angle)
+            self.ax_dcl.plot([r_engrane * np.cos(angle), x_diente], [r_engrane * np.sin(angle), y_diente], 
+                         color='#666666', linewidth=2)
+        
+        f_arrow_len = min(1.5, max(0.3, f_entrada / 20))
+        self.ax_dcl.annotate('', xy=(-r_engrane - f_arrow_len, 0), xytext=(-r_engrane, 0),
+                         arrowprops=dict(arrowstyle='->', color='#0078D4', lw=3))
+        self.ax_dcl.text(-r_engrane - f_arrow_len - 0.3, -0.2, 'F_entrada', color='#0078D4', fontsize=10, fontweight='bold')
+        
+        fs_arrow_len = min(1.8, max(0.3, f_salida / 200))
+        self.ax_dcl.annotate('', xy=(0, r_engrane + fs_arrow_len), xytext=(0, r_engrane),
+                       arrowprops=dict(arrowstyle='->', color='#28A745', lw=3))
+        self.ax_dcl.text(0.2, r_engrane + fs_arrow_len, 'F_salida', color='#28A745', fontsize=10, fontweight='bold')
+        
+        theta_arrow = np.linspace(0, np.pi/2, 15)
+        x_arc = 0.7 * np.cos(theta_arrow)
+        y_arc = 0.7 * np.sin(theta_arrow)
+        self.ax_dcl.plot(x_arc, y_arc, color='#FF6B00', lw=2)
+        torque = f_entrada * radio
+        self.ax_dcl.annotate('', xy=(0.5 * np.cos(np.pi/4), 0.5 * np.sin(np.pi/4)), xytext=(0.6, 0.3),
+                         arrowprops=dict(arrowstyle='->', color='#FF6B00', lw=2))
+        self.ax_dcl.text(0.55, 0.65, 'τ', color='#FF6B00', fontsize=12, fontweight='bold')
+        
+        self.ax_dcl.text(-2.3, -1.0, f'F_in: {f_entrada:.1f}N', color='#0078D4', fontsize=9)
+        self.ax_dcl.text(-2.3, -1.2, f'F_out: {f_salida:.1f}N', color='#28A745', fontsize=9)
+        self.ax_dcl.text(-2.3, -1.4, f'τ: {torque:.3f}Nm', color='#FF6B00', fontsize=9)
+        self.ax_dcl.text(-2.3, -1.6, f'VM: {vm:.2f}', color='#0078D4', fontsize=9, fontstyle='italic')
+        
+        self.canvas_dcl.draw()
 
     def _crear_grupo_entrada(self) -> QGroupBox:
         """Crea el grupo de parámetros de entrada."""
@@ -279,6 +406,9 @@ class CalculatorTab(QWidget):
             # Mensaje de éxito
             self.label_estado.setText("✓ Cálculo exitoso")
             self.label_estado.setStyleSheet("color: #00FF7F;")
+
+            # Actualizar DCL
+            self._actualizar_dcl(f_entrada, resultados['f_salida'], radio, resultados['vm'])
 
             # Emitir señal
             self.calculo_realizado.emit(resultados)

@@ -368,7 +368,7 @@ class InverseScrewCalculator:
         return paso_max
 
     @staticmethod
-    def verificar_diseño(f_entrada: float, radio: float, paso: float, f_salida_necesaria: float) -> Tuple[bool, str, dict]:
+    def verificar_diseno(f_entrada: float, radio: float, paso: float, f_salida_necesaria: float) -> Tuple[bool, str, dict]:
         """
         Verifica si un diseño given puede lograr la F_salida necesaria.
 

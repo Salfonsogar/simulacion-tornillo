@@ -40,7 +40,7 @@ def main():
         from gui import ejecutar
         ejecutar()
     except Exception as e:
-        print(f"[ERROR] {e}")
+        print(f"\n[CRITICAL ERROR] {e}")
         import traceback
         traceback.print_exc()
         input("\nPresione Enter para salir...")

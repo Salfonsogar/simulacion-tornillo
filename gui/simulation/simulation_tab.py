@@ -47,6 +47,7 @@ class SimulationTab(QWidget):
             parent: Widget padre (opcional)
         """
         super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         
         self._controller = SimulationController()
         self._F = 0.0
@@ -59,146 +60,160 @@ class SimulationTab(QWidget):
     
     def _setup_ui(self):
         """Configura la interfaz."""
-        c = {
-            'primary': '#0078D4',
-            'success': '#28A745',
-            'danger': '#DC3545',
-            'border': '#DEE2E6',
-            'text': '#212529',
-            'text_secondary': '#6C757D',
-        }
+    COLORS = {
+        'primary': '#0078D4',
+        'primary_hover': '#005A9E',
+        'accent': '#FF6B00',
+        'success': '#107C10',
+        'danger': '#A4262C',
+        'border': '#EDEBE9',
+        'text': '#201F1E',
+        'text_secondary': '#605E5C',
+        'bg_card': '#FFFFFF',
+        'bg_main': '#F3F2F1',
+    }
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._controller = SimulationController()
+        self._F = 0.0
+        self._setup_ui()
+        self._connect_signals()
+        self._timer = QTimer()
+        self._timer.timeout.connect(self._tick)
+    
+    def _setup_ui(self):
+        """Configura la interfaz."""
+        c = self.COLORS
         
         main_layout = QVBoxLayout()
-        main_layout.setSpacing(10)
-        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(20)
+        main_layout.setContentsMargins(20, 20, 20, 20)
         
-        titulo = QLabel("Simulacion del Tornillo - Sistema Dinamico Amortiguado")
-        titulo.setStyleSheet(f"color: {c['primary']}; font-size: 16px; font-weight: bold;")
+        titulo = QLabel("🎬 Simulador de Sistema Dinámico (RK4)")
+        titulo.setStyleSheet(f"color: {c['primary']}; font-size: 20px; font-weight: bold;")
         main_layout.addWidget(titulo)
         
         hlayout = QHBoxLayout()
-        hlayout.setSpacing(10)
+        hlayout.setSpacing(15)
         
         self._anim_widget = AnimationWidget()
-        self._anim_widget.setMinimumSize(250, 300)
-        self._anim_widget.setStyleSheet(f"border: 1px solid {c['border']}; border-radius: 8px;")
+        self._anim_widget.setMinimumSize(350, 400)
+        self._anim_widget.setStyleSheet(f"border: 1px solid {c['border']}; border-radius: 12px; background-color: white;")
         hlayout.addWidget(self._anim_widget, 1)
         
         self._chart_widget = ChartWidget()
-        self._chart_widget.setMinimumSize(250, 300)
+        self._chart_widget.setMinimumSize(350, 400)
         hlayout.addWidget(self._chart_widget, 1)
         
         main_layout.addLayout(hlayout)
         
+        # Dashboard Controles
+        controles_frame = QFrame()
+        controles_frame.setStyleSheet(f"background-color: {c['bg_card']}; border-radius: 10px; border: 1px solid {c['border']};")
+        controles_layout = QHBoxLayout(controles_frame)
+        controles_layout.setContentsMargins(15, 15, 15, 15)
+        
         self._panel_controles = self._crear_controles()
-        main_layout.addWidget(self._panel_controles)
+        controles_layout.addWidget(self._panel_controles, 2)
         
         self._panel_info = self._crear_panel_info()
-        main_layout.addWidget(self._panel_info)
+        controles_layout.addWidget(self._panel_info, 1)
         
+        main_layout.addWidget(controles_frame)
         self.setLayout(main_layout)
     
-    def _crear_controles(self) -> QGroupBox:
+    def _crear_controles(self) -> QWidget:
         """Crea el panel de controles."""
-        grupo = QGroupBox("Parámetros del Sistema")
-        layout = QGridLayout()
+        c = self.COLORS
+        container = QWidget()
+        container.setStyleSheet("border: none; background: transparent;")
+        layout = QGridLayout(container)
         layout.setSpacing(15)
         
-        layout.addWidget(QLabel("Masa (m):"), 0, 0)
-        self._slider_masa = QSlider(Qt.Orientation.Horizontal)
-        self._slider_masa.setMinimum(1)
-        self._slider_masa.setMaximum(100)
-        self._slider_masa.setValue(10)
-        self._slider_masa.setTickPosition(QSlider.TickPosition.TicksBelow)
-        self._slider_masa.setTickInterval(10)
-        layout.addWidget(self._slider_masa, 0, 1)
-        self._label_masa = QLabel("1.0 kg")
-        self._label_masa.setStyleSheet("color: #0078D4; font-weight: bold;")
-        layout.addWidget(self._label_masa, 0, 2)
+        def add_slider_row(label, row, min_v, max_v, init_v, target_label_attr):
+            layout.addWidget(QLabel(label), row, 0)
+            slider = QSlider(Qt.Orientation.Horizontal)
+            slider.setMinimum(min_v)
+            slider.setMaximum(max_v)
+            slider.setValue(init_v)
+            slider.setStyleSheet(f"QSlider::handle:horizontal {{ background: {c['primary']}; }}")
+            layout.addWidget(slider, row, 1)
+            
+            lbl_val = QLabel("")
+            lbl_val.setStyleSheet(f"color: {c['primary']}; font-weight: bold; min-width: 60px;")
+            layout.addWidget(lbl_val, row, 2)
+            setattr(self, f"_slider_{target_label_attr}", slider)
+            setattr(self, f"_label_{target_label_attr}", lbl_val)
+            return slider
+
+        add_slider_row("Masa (m):", 0, 1, 100, 10, "masa")
+        add_slider_row("Amortiguación (b):", 1, 0, 50, 5, "b")
+        add_slider_row("Rigidez (k):", 2, 0, 500, 100, "k")
+        add_slider_row("Fuerza (F):", 3, 0, 1000, 100, "fuerza")
         
-        layout.addWidget(QLabel("Amortiguación (b):"), 1, 0)
-        self._slider_b = QSlider(Qt.Orientation.Horizontal)
-        self._slider_b.setMinimum(0)
-        self._slider_b.setMaximum(50)
-        self._slider_b.setValue(5)
-        self._slider_b.setTickPosition(QSlider.TickPosition.TicksBelow)
-        self._slider_b.setTickInterval(10)
-        layout.addWidget(self._slider_b, 1, 1)
-        self._label_b = QLabel("0.5 Ns/m")
-        self._label_b.setStyleSheet("color: #0078D4; font-weight: bold;")
-        layout.addWidget(self._label_b, 1, 2)
-        
-        layout.addWidget(QLabel("Rigidez (k):"), 2, 0)
-        self._slider_k = QSlider(Qt.Orientation.Horizontal)
-        self._slider_k.setMinimum(10)
-        self._slider_k.setMaximum(500)
-        self._slider_k.setValue(100)
-        self._slider_k.setTickPosition(QSlider.TickPosition.TicksBelow)
-        self._slider_k.setTickInterval(50)
-        layout.addWidget(self._slider_k, 2, 1)
-        self._label_k = QLabel("100 N/m")
-        self._label_k.setStyleSheet("color: #0078D4; font-weight: bold;")
-        layout.addWidget(self._label_k, 2, 2)
-        
-        sep = QFrame()
-        sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("background-color: #CCCCCC;")
-        layout.addWidget(sep, 3, 0, 1, 3)
-        
-        self._btn_iniciar = QPushButton("▶ Iniciar")
+        btn_layout = QHBoxLayout()
+        self._btn_iniciar = QPushButton("▶ Iniciar Simulación")
         self._btn_iniciar.setCheckable(True)
-        self._btn_iniciar.setStyleSheet("""
-            QPushButton {
-                background-color: #28A745;
+        self._btn_iniciar.setMinimumHeight(40)
+        self._btn_iniciar.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_iniciar.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {c['success']};
                 color: white;
-                border: none;
-                padding: 10px 20px;
+                border-radius: 6px;
                 font-weight: bold;
-            }
+            }}
         """)
-        layout.addWidget(self._btn_iniciar, 4, 0)
+        btn_layout.addWidget(self._btn_iniciar)
         
         self._btn_reset = QPushButton("↺ Reiniciar")
-        self._btn_reset.setStyleSheet("""
-            QPushButton {
-                background-color: #757575;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-            }
-        """)
-        layout.addWidget(self._btn_reset, 4, 1)
+        self._btn_reset.setMinimumHeight(40)
+        self._btn_reset.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_reset.setStyleSheet(f"background-color: {c['text_secondary']}; color: white; border-radius: 6px;")
+        btn_layout.addWidget(self._btn_reset)
         
-        self._label_estado = QLabel("Detenido")
-        self._label_estado.setStyleSheet("color: #E65100; font-weight: bold;")
+        layout.addLayout(btn_layout, 4, 0, 1, 2)
+        
+        self._label_estado = QLabel("Estado: Detenido")
+        self._label_estado.setStyleSheet(f"color: {c['danger']}; font-weight: bold;")
         layout.addWidget(self._label_estado, 4, 2)
         
-        grupo.setLayout(layout)
-        return grupo
+        # Initial labels
+        self._label_masa.setText("1.0 kg")
+        self._label_b.setText("0.5 Ns/m")
+        self._label_k.setText("20.0 N/m")
+        self._label_fuerza.setText("10.0 N")
+        
+        return container
     
-    def _crear_panel_info(self) -> QGroupBox:
+    def _crear_panel_info(self) -> QWidget:
         """Crea el panel de información."""
-        grupo = QGroupBox("Parámetros Derivados")
-        layout = QGridLayout()
+        c = self.COLORS
+        container = QWidget()
+        container.setStyleSheet("border: none; background: transparent; border-left: 1px solid #EDEBE9; border-radius: 0;")
+        layout = QVBoxLayout(container)
         layout.setSpacing(10)
         
-        layout.addWidget(QLabel("ωₙ (frec. natural):"), 0, 0)
-        self._label_omega = QLabel("— rad/s")
-        self._label_omega.setStyleSheet("color: #0078D4; font-weight: bold;")
-        layout.addWidget(self._label_omega, 0, 1)
+        def add_info_row(label, attr):
+            row = QHBoxLayout()
+            row.addWidget(QLabel(label))
+            lbl = QLabel("—")
+            lbl.setStyleSheet(f"color: {c['primary']}; font-weight: bold;")
+            row.addWidget(lbl)
+            setattr(self, f"_label_{attr}", lbl)
+            layout.addLayout(row)
+
+        layout.addWidget(QLabel("<b>Análisis de Estabilidad</b>"))
+        add_info_row("Frec. Natural (ωₙ):", "omega")
+        add_info_row("Coef. Amort. (ζ):", "zeta")
         
-        layout.addWidget(QLabel("ζ (factor damp.):"), 1, 0)
-        self._label_zeta = QLabel("—")
-        self._label_zeta.setStyleSheet("color: #FF6B00; font-weight: bold;")
-        layout.addWidget(self._label_zeta, 1, 1)
+        self._label_tipo = QLabel("Determinado...")
+        self._label_tipo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._label_tipo.setStyleSheet(f"background-color: {c['bg_main']}; padding: 8px; border-radius: 4px; font-weight: bold;")
+        layout.addWidget(self._label_tipo)
         
-        layout.addWidget(QLabel("Tipo:"), 2, 0)
-        self._label_tipo = QLabel("—")
-        self._label_tipo.setStyleSheet("color: #333333; font-weight: bold;")
-        layout.addWidget(self._label_tipo, 2, 1)
-        
-        grupo.setLayout(layout)
-        return grupo
+        return container
     
     def _connect_signals(self):
         """Conecta las señales."""
@@ -208,6 +223,7 @@ class SimulationTab(QWidget):
         self._slider_masa.valueChanged.connect(self._on_masa_changed)
         self._slider_b.valueChanged.connect(self._on_b_changed)
         self._slider_k.valueChanged.connect(self._on_k_changed)
+        self._slider_fuerza.valueChanged.connect(self._on_fuerza_changed)
     
     def _on_toggle(self, checked: bool):
         """Maneja toggle de inicio/detención."""
@@ -276,13 +292,21 @@ class SimulationTab(QWidget):
         self._label_k.setText(f"{k:.1f} N/m")
         self._actualizar_parametros()
     
+    def _on_fuerza_changed(self, value: int):
+        """Maneja cambio de fuerza."""
+        f = value / 10.0
+        self._label_fuerza.setText(f"{f:.1f} N")
+        self._actualizar_parametros()
+    
     def _actualizar_parametros(self):
         """Actualiza parámetros del modelo."""
         m = self._slider_masa.value() / 10.0
         b = self._slider_b.value() / 10.0
         k = self._slider_k.value() / 5.0
+        f = self._slider_fuerza.value() / 10.0
         
         self._controller.set_parameters(m, b, k)
+        self._controller.set_F(f)
         self._actualizar_info()
     
     def _actualizar_info(self):
@@ -315,9 +339,11 @@ class SimulationTab(QWidget):
         m = self._slider_masa.value() / 10.0
         b = self._slider_b.value() / 10.0
         k = self._slider_k.value() / 5.0
+        f = self._slider_fuerza.value() / 10.0
         
         # Actualizar parámetros del modelo
         self._controller.set_parameters(m, b, k)
+        self._controller.set_F(f)
         
         # Hacer un paso de simulación usando el timer del controlador
         self._controller._tick()

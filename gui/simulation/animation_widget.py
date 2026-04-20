@@ -78,7 +78,13 @@ class AnimationWidget(QWidget):
         cuerpo_ancho = 40
         cuerpo_alto = min(200, self.height() - 100)
         
-        y_offset = int(self._desplazamiento * 500)
+        # Escalamiento visual: Limitamos el desplazamiento para que no se salga del widget
+        # Usamos una escala que permite ver el movimiento pero mantiene el objeto centrado
+        y_max_visual = cuerpo_alto // 2
+        y_offset = int(self._desplazamiento * 50) # Escala 1:50 para mayor estabilidad visual
+        
+        # Clamp para seguridad visual
+        y_offset = max(-y_max_visual, min(y_max_visual, y_offset))
         
         rect = QRectF(
             float(cx - cuerpo_ancho // 2),
@@ -107,8 +113,8 @@ class AnimationWidget(QWidget):
         num_vueltas = 6
         paso_visual = 20
         
-        escala = 500
-        y_base = cy - 80 + int(self._desplazamiento * escala)
+        escala = 50
+        y_base = cy - 80 + max(-50, min(50, int(self._desplazamiento * escala)))
         
         for vuelta in range(num_vueltas):
             path = QPainterPath()
@@ -138,9 +144,9 @@ class AnimationWidget(QWidget):
         pen.setWidth(3)
         painter.setPen(pen)
         
-        escala = 500
+        escala = 50
         y_inicio = cy + 90
-        y_fin = cy + 110 + int(self._desplazamiento * escala / 2)
+        y_fin = cy + 110 + max(-20, min(20, int(self._desplazamiento * escala / 2)))
         
         painter.drawLine(cx, y_inicio, cx, y_fin)
         painter.drawLine(cx - 8, y_fin - 8, cx, y_fin)

@@ -1,10 +1,11 @@
 """
 Ventana Principal.
 
-Aplicación con 3 pestañas:
+Aplicación con 4 pestañas:
 - Calculadora
 - Simulación
 - Criptografía
+- Reto Diseño (Metodología Inversa)
 """
 
 import sys
@@ -14,7 +15,8 @@ from PyQt6.QtCore import QSize
 
 from .calculator_tab import CalculatorTab
 from .crypto_tab import CryptoTab
-from .simulation import SimulationTab
+from .simulation.simulation_tab import SimulationTab
+from .inverse_tab import InverseTab
 
 
 class MainWindow(QMainWindow):
@@ -27,22 +29,21 @@ class MainWindow(QMainWindow):
     3. Criptografía - Cifrado/descifrado
     """
     
-    # Paleta de colores - Tema Claro
+    # Paleta de colores unificada - Tema Profesional (Modern Blue & Orange)
     COLORS = {
-        'primary': '#0078D4',      # Azul principal
-        'primary_dark': '#005A9E',
-        'secondary': '#FF6B00',   # Naranja
-        'success': '#28A745',      # Verde
-        'info': '#17A2B8',         # Cyan
-        'warning': '#FF6B00',      # Naranja
-        'danger': '#DC3545',      # Rojo
-        'light': '#F8F9FA',        # Fondo claro
-        'dark': '#212529',        # Texto oscuro
-        'border': '#DEE2E6',      # Bordes
-        'bg_main': '#FFFFFF',      # Fondo principal
-        'bg_secondary': '#F8F9FA', # Fondo secundario
-        'text': '#212529',        # Texto
-        'text_secondary': '#6C757D', # Texto secundario
+        'primary': '#0078D4',        # Azul corporativo
+        'primary_hover': '#005A9E',
+        'accent': '#FF6B00',         # Naranja para acciones
+        'accent_hover': '#E65100',
+        'success': '#107C10',        # Verde éxito
+        'info': '#0078D4',           # Informativo
+        'danger': '#A4262C',         # Rojo error
+        'bg_main': '#F3F2F1',        # Gris muy claro fondo
+        'bg_card': '#FFFFFF',        # Blanco para contenedores
+        'border': '#EDEBE9',         # Borde sutil
+        'text': '#201F1E',           # Texto principal
+        'text_secondary': '#605E5C', # Texto secundario/desactivado
+        'selection': '#CCE4F6',      # Azul selección
     }
     
     def __init__(self):
@@ -60,10 +61,7 @@ class MainWindow(QMainWindow):
         c = self.COLORS
         
         estilo = f"""
-            QMainWindow {{
-                background-color: {c['bg_main']};
-            }}
-            QWidget {{
+            QMainWindow, QWidget {{
                 background-color: {c['bg_main']};
                 color: {c['text']};
                 font-family: 'Segoe UI', Arial, sans-serif;
@@ -71,29 +69,33 @@ class MainWindow(QMainWindow):
             }}
             QTabWidget::pane {{
                 border: 1px solid {c['border']};
-                background-color: {c['bg_main']};
+                background-color: {c['bg_card']};
+                border-radius: 4px;
             }}
             QTabBar {{
-                background-color: {c['bg_secondary']};
+                background-color: transparent;
             }}
             QTabBar::tab {{
-                background-color: {c['bg_secondary']};
+                background-color: {c['bg_main']};
                 color: {c['text_secondary']};
-                padding: 10px 20px;
+                padding: 12px 25px;
                 border: 1px solid {c['border']};
                 border-bottom: none;
                 margin-right: 2px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
             }}
             QTabBar::tab:selected {{
-                background-color: {c['bg_main']};
+                background-color: {c['bg_card']};
                 color: {c['primary']};
                 font-weight: bold;
+                border-bottom: 2px solid {c['primary']};
             }}
             QTabBar::tab:hover:!selected {{
-                background-color: {c['light']};
+                background-color: {c['selection']};
             }}
             QStatusBar {{
-                background-color: {c['bg_secondary']};
+                background-color: {c['bg_card']};
                 color: {c['text_secondary']};
                 border-top: 1px solid {c['border']};
             }}
@@ -121,10 +123,10 @@ class MainWindow(QMainWindow):
                 min-width: 80px;
             }}
             QPushButton:hover {{
-                background-color: {c['primary_dark']};
+                background-color: {c['primary_hover']};
             }}
             QPushButton:pressed {{
-                background-color: {c['primary_dark']};
+                background-color: {c['primary_hover']};
             }}
             QLineEdit, QTextEdit {{
                 background-color: white;
@@ -141,7 +143,7 @@ class MainWindow(QMainWindow):
                 background-color: transparent;
             }}
             QSlider::groove:horizontal {{
-                background: {c['light']};
+                background: {c['bg_main']};
                 height: 8px;
                 border-radius: 4px;
                 border: 1px solid {c['border']};
@@ -156,7 +158,7 @@ class MainWindow(QMainWindow):
                 border: 1px solid {c['border']};
                 border-radius: 4px;
                 text-align: center;
-                background-color: {c['light']};
+                background-color: {c['bg_main']};
             }}
             QProgressBar::chunk {{
                 background-color: {c['primary']};
@@ -170,13 +172,16 @@ class MainWindow(QMainWindow):
         tabs.setDocumentMode(True)
         
         self._tab_calc = CalculatorTab()
-        tabs.addTab(self._tab_calc, "Calculadora")
+        tabs.addTab(self._tab_calc, "📊 Calculadora")
         
         self._tab_sim = SimulationTab()
-        tabs.addTab(self._tab_sim, "Simulación")
+        tabs.addTab(self._tab_sim, "🎬 Simulación")
         
         self._tab_crypto = CryptoTab()
-        tabs.addTab(self._tab_crypto, "Criptografía")
+        tabs.addTab(self._tab_crypto, "🔐 Criptografía")
+        
+        self._tab_inverse = InverseTab()
+        tabs.addTab(self._tab_inverse, "🔧 Reto Diseño")
         
         self.setCentralWidget(tabs)
         

@@ -19,7 +19,8 @@ import math
 
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                             QLabel, QPushButton, QSlider, QGroupBox,
-                            QCheckBox, QSizePolicy, QFrame, QScrollArea)
+                            QCheckBox, QSizePolicy, QFrame, QScrollArea,
+                            QProgressBar)
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor
 
@@ -157,6 +158,17 @@ class SimulationTab(QWidget):
         self.panel_valores.hide()
         layout_principal.addWidget(self.panel_valores)
 
+        # Panel DCL - Diagrama de Cuerpo Libre
+        self.btn_dcl = QPushButton("DCL - Diagrama de Cuerpo Libre (+)")
+        self.btn_dcl.setCheckable(True)
+        self.btn_dcl.setChecked(False)
+        self.btn_dcl.clicked.connect(self._toggle_dcl)
+        layout_principal.addWidget(self.btn_dcl)
+        
+        self.panel_dcl = self._crear_panel_dcl()
+        self.panel_dcl.hide()
+        layout_principal.addWidget(self.panel_dcl)
+
         # Botón mostrar/ocultar controles
         self.btn_mostrar_controles = QPushButton("Controles (+)")
         self.btn_mostrar_controles.setCheckable(True)
@@ -173,6 +185,27 @@ class SimulationTab(QWidget):
         self.label_estado = QLabel("Estado: Detenido")
         self.label_estado.setStyleSheet("color: #E65100; font-size: 11px;")
         layout_principal.addWidget(self.label_estado)
+        
+        # Barra de progreso para simulación
+        self.barra_progreso = QProgressBar()
+        self.barra_progreso.setMinimum(0)
+        self.barra_progreso.setMaximum(100)
+        self.barra_progreso.setValue(0)
+        self.barra_progreso.setFormat("Simulación: %p% - Estado: Estabilizando...")
+        self.barra_progreso.setStyleSheet("""
+            QProgressBar {
+                border: 1px solid #0078D4;
+                border-radius: 4px;
+                text-align: center;
+                background-color: #F0F0F0;
+            }
+            QProgressBar::chunk {
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #0078D4, stop:1 #28A745);
+            }
+        """)
+        self.barra_progreso.hide()
+        layout_principal.addWidget(self.barra_progreso)
 
         container.setLayout(layout_principal)
         scroll.setWidget(container)
@@ -259,6 +292,145 @@ class SimulationTab(QWidget):
         self._label_gamma.setText(f"{gamma:.2f}")
         self._label_omega.setText(f"{omega:.2f} rad/s")
         self._label_k.setText(f"{k:.1f} N/m")
+
+    def _crear_panel_dcl(self) -> QWidget:
+        """Crea el panel de DCL - Diagrama de Cuerpo Libre."""
+        grupo = QGroupBox("DCL: Diagrama de Cuerpo Libre del Tornillo")
+        layout = QVBoxLayout()
+        layout.setSpacing(10)
+
+        # Canvas matplotlib para el DCL
+        self.fig_dcl = Figure(figsize=(7, 4), facecolor='#FFFFFF')
+        self.ax_dcl = self.fig_dcl.add_subplot(111)
+        self.ax_dcl.set_facecolor('#F8F9FA')
+        
+        self.canvas_dcl_widget = FigureCanvasQTAgg(self.fig_dcl)
+        self.canvas_dcl_widget.setMinimumSize(400, 200)
+        self.canvas_dcl_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        
+        layout.addWidget(self.canvas_dcl_widget)
+
+        # Leyenda de fuerzas
+        leyenda_layout = QGridLayout()
+        leyenda_layout.setSpacing(15)
+        
+        lbl_f_entrada = QLabel("🟠 F_entrada: Fuerza aplicada al brazo de giro")
+        lbl_f_entrada.setStyleSheet("color: #E65100; font-weight: bold;")
+        leyenda_layout.addWidget(lbl_f_entrada, 0, 0)
+        
+        lbl_torque = QLabel("🔴 τ = F × r: Torque (momento de torsión)")
+        lbl_torque.setStyleSheet("color: #DC3545; font-weight: bold;")
+        leyenda_layout.addWidget(lbl_torque, 0, 1)
+        
+        lbl_f_salida = QLabel("🟢 F_salida: Fuerza lineal resultante")
+        lbl_f_salida.setStyleSheet("color: #28A745; font-weight: bold;")
+        leyenda_layout.addWidget(lbl_f_salida, 1, 0)
+        
+        lbl_formula = QLabel("📐 VM = 2πr/L  |  F_salida = F_entrada × VM")
+        lbl_formula.setStyleSheet("color: #0078D4; font-weight: bold;")
+        leyenda_layout.addWidget(lbl_formula, 1, 1)
+        
+        layout.addLayout(leyenda_layout)
+
+        # Texto explicativo
+        info = QLabel(
+            "El tornillo es un PLANO INCLINADO ENROLLADO.\n"
+            "El movimiento circular (giro) se transforma en movimiento lineal (avance).\n"
+            "💡 ANALOGÍA CRIPTOGRÁFICA: El radio (r) y paso (L) son como la 'llave' - "
+            "sin ellos, no hay transformación posible."
+        )
+        info.setStyleSheet("""
+            color: #555555; 
+            font-size: 11px; 
+            background-color: #E8F5E9;
+            padding: 10px;
+            border-radius: 4px;
+        """)
+        info.setWordWrap(True)
+        layout.addWidget(info)
+        
+        # Botón actualizar DCL
+        btn_actualizar = QPushButton("🔄 Actualizar DCL")
+        btn_actualizar.clicked.connect(self._actualizar_dcl)
+        layout.addWidget(btn_actualizar)
+        
+        grupo.setLayout(layout)
+        
+        # Inicializar DCL después de que la UI esté lista
+        QTimer.singleShot(100, self._actualizar_dcl)
+        
+        return grupo
+
+    def _actualizar_dcl(self):
+        """Dibuja el Diagrama de Cuerpo Libre."""
+        self.ax_dcl.clear()
+        self.ax_dcl.set_facecolor('#F8F9FA')
+        
+        # Obtener valores actuales
+        radio = 0.05  #默认值
+        paso = 0.002
+        if hasattr(self, 'slider_radio') and hasattr(self, 'slider_paso'):
+            radio = self.slider_radio.value() / 1000.0
+            paso = self.slider_paso.value() / 10000.0
+        
+        # Dibujar tornillo simplificado (eje horizontal)
+        self.ax_dcl.plot([-0.8, 0.8], [0, 0], 'k-', linewidth=4, label='Eje del tornillo')
+        
+        # Dibujar rosca como triángulo (plano inclinado)
+        x_rosca = [-0.6, -0.4, -0.6]
+        y_rosca = [0, 0.15, 0.15]
+        self.ax_dcl.fill(x_rosca, y_rosca, alpha=0.3, color='#0078D4', label='Rosca (plano inclinado)')
+        
+        # Flecha F_entrada (naranja) - fuerza tangencial
+        self.ax_dcl.annotate('', xy=(-0.5, -0.25), xytext=(-0.5, -0.05),
+                            arrowprops=dict(arrowstyle='->', color='#E65100', lw=3))
+        self.ax_dcl.text(-0.55, -0.18, 'F_entrada', color='#E65100', fontsize=10, fontweight='bold')
+        
+        # Flecha Torque (rojo) - momento
+        self.ax_dcl.annotate('', xy=(0.3, 0.3), xytext=(0.1, 0.1),
+                            arrowprops=dict(arrowstyle='->', color='#DC3545', lw=2))
+        self.ax_dcl.text(0.32, 0.28, 'τ', color='#DC3545', fontsize=12, fontweight='bold')
+        
+        # Brazo de momento
+        self.ax_dcl.plot([0, radio*5], [0, 0], 'r--', linewidth=1.5, alpha=0.7)
+        self.ax_dcl.text(radio*5/2, -0.05, f'r={radio*100:.1f}cm', color='#DC3545', fontsize=9, ha='center')
+        
+        # Flecha F_salida (verde) - fuerza lineal hacia arriba
+        self.ax_dcl.annotate('', xy=(-0.6, 0.35), xytext=(-0.6, 0.15),
+                            arrowprops=dict(arrowstyle='->', color='#28A745', lw=3))
+        self.ax_dcl.text(-0.65, 0.25, 'F_salida', color='#28A745', fontsize=10, fontweight='bold')
+        
+        # Indicador de transformación
+        self.ax_dcl.text(0.5, -0.35, 'Giro → Avance', color='#7B1FA2', fontsize=11, 
+                        fontweight='bold', ha='center',
+                        bbox=dict(boxstyle='round', facecolor='#EDE7F6', alpha=0.8))
+        
+        # VM
+        vm = (2 * np.pi * radio) / paso if paso > 0 else 0
+        self.ax_dcl.text(0.5, -0.45, f'VM = {vm:.1f}x', color='#0078D4', fontsize=12, 
+                        fontweight='bold', ha='center')
+        
+        # Configurar axes
+        self.ax_dcl.set_xlim(-1, 1)
+        self.ax_dcl.set_ylim(-0.6, 0.5)
+        self.ax_dcl.set_aspect('equal')
+        self.ax_dcl.axis('off')
+        self.ax_dcl.set_title('Diagrama de Cuerpo Libre: Transformación Circular → Lineal', 
+                             color='#333333', fontsize=12, fontweight='bold')
+        
+        self.canvas_dcl_widget.draw()
+
+    def _toggle_dcl(self, checked):
+        """Maneja el toggle del panel DCL."""
+        if checked:
+            self.btn_dcl.setText("DCL - Diagrama de Cuerpo Libre (-)")
+            self.panel_dcl.show()
+            self._actualizar_dcl()
+        else:
+            self.btn_dcl.setText("DCL - Diagrama de Cuerpo Libre (+)")
+            self.panel_dcl.hide()
+
+        self._actualizar_panel_valores()
 
     def _crear_canvas_tornillo(self) -> QWidget:
         """Crea el canvas de animación del tornillo."""
@@ -574,12 +746,16 @@ class SimulationTab(QWidget):
             self.btn_iniciar.setText("Detener")
             self.label_estado.setText("Estado: Animando")
             self.label_estado.setStyleSheet("color: #0078D4;")
-            self.timer.start(50)
+            self.barra_progreso.show()
+            self.barra_progreso.setValue(0)
+            self.timer.start(35)  # Animation more fluid
         else:
             self.btn_iniciar.setText("Iniciar")
             self.label_estado.setText("Estado: Detenido")
             self.label_estado.setStyleSheet("color: #E65100;")
             self.timer.stop()
+            self.barra_progreso.setValue(100)
+            self.barra_progreso.setFormat("Completado: 100%")
 
     def _on_cambiar_velocidad(self, valor):
         """Maneja el cambio de velocidad."""
@@ -649,6 +825,16 @@ class SimulationTab(QWidget):
         if self.chk_oscilador.isChecked():
             tiempo = (self._angulo_actual / (2 * np.pi)) % 10
             self._actualizar_oscilador(tiempo)
+        
+        # Actualizar barra de progreso
+        progreso = int((self._angulo_actual % (4 * np.pi)) / (4 * np.pi) * 100)
+        self.barra_progreso.setValue(progreso)
+        
+        # Determinar estado del sistema (estabilizado o no)
+        if self._angulo_actual > 10:
+            self.barra_progreso.setFormat(f"Simulación: {progreso}% - Estado: Estabilizado")
+        else:
+            self.barra_progreso.setFormat(f"Simulación: {progreso}% - Estado: Transitorio")
 
     def iniciar_animacion(self):
         """Inicia la animación programáticamente."""

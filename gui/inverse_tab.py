@@ -42,6 +42,7 @@ class InverseTab(QWidget):
     def __init__(self, parent=None):
         """Inicializa la pestaña."""
         super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self._setup_ui()
         self._connect_signals()
         self._generar_reto()
@@ -50,54 +51,54 @@ class InverseTab(QWidget):
         """Configura la interfaz."""
         self.setStyleSheet("""
             QLabel {
-                color: #333333;
+                color: #201F1E;
                 font-size: 12px;
             }
-            QLabel titulo {
-                color: #7B1FA2;
-                font-size: 18px;
+            QLabel#titulo {
+                color: #0078D4;
+                font-size: 20px;
                 font-weight: bold;
             }
-            QLabel subtitulo {
-                color: #512DA8;
+            QLabel#subtitulo {
+                color: #0078D4;
                 font-size: 14px;
                 font-weight: bold;
             }
-            QLabel objetivo {
-                color: #D32F2F;
+            QLabel#objetivo {
+                color: #A4262C;
                 font-size: 14px;
                 font-weight: bold;
             }
-            QLabel exito {
-                color: #388E3C;
+            QLabel#exito {
+                color: #107C10;
                 font-size: 16px;
                 font-weight: bold;
             }
-            QLabel insuficiencia {
-                color: #F57C00;
+            QLabel#insuficiencia {
+                color: #FF6B00;
                 font-size: 13px;
             }
             QLineEdit {
                 background-color: #FFFFFF;
-                border: 1px solid #CCCCCC;
+                border: 1px solid #EDEBE9;
                 border-radius: 4px;
                 padding: 8px;
-                color: #333333;
+                color: #201F1E;
                 font-size: 12px;
             }
             QLineEdit:focus {
-                border: 1px solid #7B1FA2;
+                border: 1px solid #0078D4;
             }
             QLineEdit.error {
-                border: 2px solid #D32F2F;
-                background-color: #FFEBEE;
+                border: 2px solid #A4262C;
+                background-color: #FDE7E9;
             }
             QLineEdit.exito {
-                border: 2px solid #388E3C;
-                background-color: #E8F5E9;
+                border: 2px solid #107C10;
+                background-color: #DFF6DD;
             }
             QPushButton {
-                background-color: #7B1FA2;
+                background-color: #0078D4;
                 color: #FFFFFF;
                 border: none;
                 border-radius: 6px;
@@ -106,58 +107,61 @@ class InverseTab(QWidget):
                 font-weight: bold;
             }
             QPushButton:hover {
-                background-color: #6A1B9A;
+                background-color: #005A9E;
             }
             QPushButton:pressed {
-                background-color: #4A148C;
+                background-color: #004578;
             }
             QPushButton#btn_verificar {
-                background-color: #388E3C;
+                background-color: #107C10;
             }
             QPushButton#btn_verificar:hover {
-                background-color: #2E7D32;
+                background-color: #0B5A0B;
             }
             QPushButton#btn_nuevo_reto {
-                background-color: #FF6F00;
+                background-color: #FF6B00;
             }
             QPushButton#btn_nuevo_reto:hover {
                 background-color: #E65100;
             }
             QGroupBox {
-                border: 1px solid #CCCCCC;
+                border: 1px solid #EDEBE9;
                 border-radius: 8px;
                 margin-top: 10px;
                 padding-top: 10px;
-                color: #333333;
+                color: #201F1E;
                 font-size: 12px;
+                background-color: white;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
                 subcontrol-position: top left;
                 padding: 0 5px;
-                color: #7B1FA2;
+                color: #0078D4;
+                font-weight: bold;
             }
             QSlider::groove:horizontal {
-                border: 1px solid #999999;
-                height: 8px;
-                background: #E0E0E0;
-                border-radius: 4px;
+                border: 1px solid #EDEBE9;
+                height: 6px;
+                background: #F3F2F1;
+                border-radius: 3px;
             }
             QSlider::handle:horizontal {
-                background: #7B1FA2;
-                border: 1px solid #5D4037;
-                width: 18px;
+                background: #0078D4;
+                border: 1px solid #005A9E;
+                width: 16px;
+                height: 16px;
                 margin: -5px 0;
-                border-radius: 9px;
+                border-radius: 8px;
             }
             QProgressBar {
-                border: 1px solid #CCCCCC;
+                border: 1px solid #EDEBE9;
                 border-radius: 4px;
                 text-align: center;
-                background-color: #F5F5F5;
+                background-color: #F3F2F1;
             }
             QProgressBar::chunk {
-                background-color: #7B1FA2;
+                background-color: #0078D4;
             }
         """)
 
@@ -177,7 +181,10 @@ class InverseTab(QWidget):
 
         descripcion = QLabel(
             "Diseña un tornillo que pueda mover la carga objetivo.\n"
-            "Ajusta el radio (r) y el paso (L) para lograr la fuerza necesaria."
+            "Ajusta el radio (r) y el paso (L) para lograr la fuerza necesaria.\n\n"
+            "💡 ANALOGÍA CRIPTOGRÁFICA: Encontrar los parámetros correctos (r, L)\n"
+            "es como encontrar la 'llave' correcta para AES-256.\n"
+            "¡Sin la llave exacta, la resistencia es infinita!"
         )
         descripcion.setWordWrap(True)
         descripcion.setStyleSheet("color: #666666; font-size: 11px;")
@@ -283,7 +290,7 @@ class InverseTab(QWidget):
         self.label_valor_paso = QLabel("0.002 m")
         self.label_valor_paso.setFixedWidth(80)
         self.label_valor_paso.setStyleSheet("font-weight: bold; color: #7B1FA2;")
-        layout_paso.addWidget(self.label_valor_paso)
+        layout_radio.addWidget(self.label_valor_paso)
 
         self.input_paso = QLineEdit()
         self.input_paso.setPlaceholderText("0.002")
@@ -358,7 +365,7 @@ class InverseTab(QWidget):
     def _connect_signals(self):
         """Conecta las señales."""
         self.btn_generar_reto.clicked.connect(self._generar_reto)
-        self.btn_verificar.clicked.connect(self._verificar_diseño)
+        self.btn_verificar.clicked.connect(self._verificar_diseno)
         self.btn_nuevo_reto.clicked.connect(self._nuevo_reto)
 
         self.slider_radio.valueChanged.connect(self._on_slider_radio)
@@ -402,8 +409,8 @@ class InverseTab(QWidget):
     def _generar_reto(self):
         """Genera un nuevo reto."""
         try:
-            self.f_salida_necesaria = float(self.input_f_salida.text())
-            self.f_entrada_max = float(self.input_f_entrada_max.text())
+            self.f_salida_necesaria = float(self.input_f_salida.text() or "500.0")
+            self.f_entrada_max = float(self.input_f_entrada_max.text() or "50.0")
 
             if self.f_salida_necesaria <= 0 or self.f_entrada_max <= 0:
                 self.label_mensaje_objetivo.setText("⚠️ Los valores deben ser positivos")
@@ -422,6 +429,16 @@ class InverseTab(QWidget):
                 f"💡 Ajusta radio y paso para lograr esa ventaja mecánica"
             )
             self.label_mensaje_objetivo.setStyleSheet("color: #7B1FA2; font-weight: bold;")
+
+            # Restablecer mensaje de éxito de retos anteriores
+            self.label_estado.setText("🎯 Esperando diseño...")
+            self.label_estado.setStyleSheet("font-size: 14px; padding: 10px; color: #201F1E; background-color: transparent;")
+
+            # Forzar al usuario a mover los parámetros (reiniciar a valores mínimos)
+            self.slider_radio.setValue(self.slider_radio.minimum())
+            self.slider_paso.setValue(self.slider_paso.maximum()) # El paso máximo es el "peor" para VM
+            self.input_radio.setText(f"{self.slider_radio.minimum()/1000.0:.3f}")
+            self.input_paso.setText(f"{self.slider_paso.maximum()/10000.0:.4f}")
 
             self.btn_verificar.setEnabled(True)
             self._actualizar_preview()
@@ -455,7 +472,7 @@ class InverseTab(QWidget):
         except (ValueError, AttributeError):
             pass
 
-    def _verificar_diseño(self):
+    def _verificar_diseno(self):
         """Verifica si el diseño logra el objetivo."""
         try:
             radio = float(self.input_radio.text())
@@ -509,8 +526,4 @@ class InverseTab(QWidget):
         self.input_f_salida.setText(f"{self.f_salida_necesaria:.1f}")
         self.input_f_entrada_max.setText(f"{self.f_entrada_max:.1f}")
 
-        self.slider_radio.setValue(random.randint(20, 80))
-        self.slider_paso.setValue(random.randint(5, 30))
-
         self._generar_reto()
-        self._actualizar_preview()

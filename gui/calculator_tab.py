@@ -20,13 +20,14 @@ class CalculatorTab(QWidget):
     
     COLORS = {
         'primary': '#0078D4',
-        'primary_dark': '#005A9E',
-        'success': '#28A745',
-        'text': '#212529',
-        'text_secondary': '#6C757D',
-        'border': '#DEE2E6',
-        'bg': '#FFFFFF',
-        'bg_secondary': '#F8F9FA',
+        'primary_hover': '#005A9E',
+        'accent': '#FF6B00',
+        'success': '#107C10',
+        'text': '#201F1E',
+        'text_secondary': '#605E5C',
+        'border': '#EDEBE9',
+        'bg_card': '#FFFFFF',
+        'bg_main': '#F3F2F1',
     }
     
     def __init__(self, parent=None):
@@ -38,84 +39,103 @@ class CalculatorTab(QWidget):
         c = self.COLORS
         
         layout = QVBoxLayout()
-        layout.setSpacing(15)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(20)
+        layout.setContentsMargins(30, 30, 30, 30)
         
-        titulo = QLabel("Calculadora del Tornillo")
-        titulo.setStyleSheet(f"color: {c['primary']}; font-size: 18px; font-weight: bold;")
+        titulo = QLabel("📊 Calculadora de Ventaja Mecánica")
+        titulo.setStyleSheet(f"color: {c['primary']}; font-size: 22px; font-weight: bold;")
         layout.addWidget(titulo)
         
         desc = QLabel(
-            "Calcula la Ventaja Mecanica (VM) del tornillo como maquina simple.\n"
-            "Formula: VM = (2*pi*r) / L"
+            "Determine la fuerza de salida y la ventaja mecánica teórica del tornillo "
+            "basado en sus dimensiones geométricas."
         )
-        desc.setStyleSheet(f"color: {c['text_secondary']}; font-size: 12px;")
+        desc.setStyleSheet(f"color: {c['text_secondary']}; font-size: 13px;")
         desc.setWordWrap(True)
         layout.addWidget(desc)
         
-        grupo = QGroupBox("Parametros de Entrada")
+        grupo = QGroupBox("Parámetros del Sistema")
+        grupo.setStyleSheet(f"""
+            QGroupBox {{
+                border: 1px solid {c['border']};
+                border-radius: 8px;
+                margin-top: 15px;
+                padding-top: 20px;
+                background-color: {c['bg_card']};
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                padding: 0 10px;
+                color: {c['primary']};
+            }}
+        """)
         g_layout = QGridLayout()
-        g_layout.setSpacing(12)
+        g_layout.setSpacing(15)
         
-        g_layout.addWidget(QLabel("Masa (m):"), 0, 0)
-        self._input_masa = QLineEdit()
-        self._input_masa.setPlaceholderText("1.0")
-        self._input_masa.setMaximumWidth(100)
+        def create_label(text):
+            lbl = QLabel(text)
+            lbl.setStyleSheet(f"color: {c['text']}; font-weight: 500;")
+            return lbl
+
+        g_layout.addWidget(create_label("Masa (m):"), 0, 0)
+        self._input_masa = QLineEdit("1.0")
+        self._input_masa.setMinimumHeight(35)
+        self._input_masa.setStyleSheet(f"border: 1px solid {c['border']}; border-radius: 4px; padding: 5px;")
         g_layout.addWidget(self._input_masa, 0, 1)
         g_layout.addWidget(QLabel("kg"), 0, 2)
         
-        g_layout.addWidget(QLabel("Radio (r):"), 1, 0)
-        self._input_radio = QLineEdit()
-        self._input_radio.setPlaceholderText("0.05")
-        self._input_radio.setMaximumWidth(100)
+        g_layout.addWidget(create_label("Radio (r):"), 1, 0)
+        self._input_radio = QLineEdit("0.05")
+        self._input_radio.setMinimumHeight(35)
+        self._input_radio.setStyleSheet(f"border: 1px solid {c['border']}; border-radius: 4px; padding: 5px;")
         g_layout.addWidget(self._input_radio, 1, 1)
         g_layout.addWidget(QLabel("m"), 1, 2)
         
-        g_layout.addWidget(QLabel("Paso (L):"), 2, 0)
-        self._input_paso = QLineEdit()
-        self._input_paso.setPlaceholderText("0.002")
-        self._input_paso.setMaximumWidth(100)
+        g_layout.addWidget(create_label("Paso (L):"), 2, 0)
+        self._input_paso = QLineEdit("0.002")
+        self._input_paso.setMinimumHeight(35)
+        self._input_paso.setStyleSheet(f"border: 1px solid {c['border']}; border-radius: 4px; padding: 5px;")
         g_layout.addWidget(self._input_paso, 2, 1)
         g_layout.addWidget(QLabel("m"), 2, 2)
         
         grupo.setLayout(g_layout)
         layout.addWidget(grupo)
         
-        self._btn_calcular = QPushButton("Calcular VM")
+        self._btn_calcular = QPushButton("Calcular Análisis")
+        self._btn_calcular.setMinimumHeight(45)
+        self._btn_calcular.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_calcular.setStyleSheet(f"""
             QPushButton {{
                 background-color: {c['primary']};
                 color: white;
                 border: none;
-                padding: 12px 24px;
+                padding: 10px 25px;
                 font-weight: bold;
                 font-size: 14px;
                 border-radius: 6px;
             }}
             QPushButton:hover {{
-                background-color: {c['primary_dark']};
+                background-color: {c['primary_hover']};
             }}
         """)
         self._btn_calcular.clicked.connect(self._calcular)
         layout.addWidget(self._btn_calcular)
         
-        self._resultado = QLabel("VM: --")
-        self._resultado.setStyleSheet(f"""
-            color: {c['primary']};
-            font-size: 28px;
-            font-weight: bold;
-            padding: 20px;
-            background-color: {c['bg_secondary']};
-            border-radius: 8px;
-            border: 1px solid {c['border']};
-        """)
-        self._resultado.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self._resultado)
+        res_container = QWidget()
+        res_container.setStyleSheet(f"background-color: {c['bg_main']}; border-radius: 10px; border: 1px solid {c['border']};")
+        res_layout = QVBoxLayout(res_container)
         
-        self._info = QLabel("")
-        self._info.setStyleSheet(f"color: {c['text_secondary']}; font-size: 12px;")
+        self._resultado = QLabel("VM: --")
+        self._resultado.setStyleSheet(f"color: {c['primary']}; font-size: 32px; font-weight: bold; border: none; background: transparent;")
+        self._resultado.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        res_layout.addWidget(self._resultado)
+        
+        self._info = QLabel("Ingrese los datos para iniciar el cálculo")
+        self._info.setStyleSheet(f"color: {c['text_secondary']}; font-size: 13px; border: none; background: transparent;")
         self._info.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self._info)
+        res_layout.addWidget(self._info)
+        
+        layout.addWidget(res_container)
         
         layout.addStretch()
         self.setLayout(layout)

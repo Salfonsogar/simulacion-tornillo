@@ -185,7 +185,7 @@ class CalculatorTab(QWidget):
         """Inicializa el DCL."""
         self.ax_dcl.clear()
         self.ax_dcl.set_xlim(-2.5, 2.5)
-        self.ax_dcl.set_ylim(-1.5, 2.5)
+        self.ax_dcl.set_ylim(-2.0, 2.5)
         self.ax_dcl.set_aspect('equal')
         self.ax_dcl.axis('off')
         
@@ -230,7 +230,7 @@ class CalculatorTab(QWidget):
         """Actualiza el DCL con nuevos valores."""
         self.ax_dcl.clear()
         self.ax_dcl.set_xlim(-2.8, 2.8)
-        self.ax_dcl.set_ylim(-2.0, 2.8)
+        self.ax_dcl.set_ylim(-2.2, 2.8)
         self.ax_dcl.set_aspect('equal')
         self.ax_dcl.axis('off')
         
@@ -276,8 +276,10 @@ class CalculatorTab(QWidget):
                       fontweight='bold', bbox=bbox_props, ha='center')
         self.ax_dcl.text(2.5, -1.7, f'τ: {torque:.3f}Nm', color='#FF6B00', fontsize=10, 
                       fontweight='bold', bbox=bbox_props, ha='center')
-        self.ax_dcl.text(0, -1.9, f'VM: {vm:.2f}x', color='#333333', fontsize=11, 
-                      fontweight='bold', fontstyle='italic', ha='center')
+        
+        vm_box = dict(boxstyle='round,pad=0.6', facecolor='#E3F2FD', edgecolor='#0078D4', alpha=0.9)
+        self.ax_dcl.text(0, -1.95, f'VM: {vm:.2f}x', color='#0078D4', fontsize=12, 
+                      fontweight='bold', fontstyle='italic', bbox=vm_box, ha='center')
         
         self.canvas_dcl.draw()
 

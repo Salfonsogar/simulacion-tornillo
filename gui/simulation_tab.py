@@ -19,7 +19,7 @@ import math
 
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                             QLabel, QPushButton, QSlider, QGroupBox,
-                            QCheckBox, QSizePolicy)
+                            QCheckBox, QSizePolicy, QFrame)
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor
 
@@ -428,15 +428,18 @@ class SimulationTab(QWidget):
 
     def _crear_controles(self) -> QWidget:
         """Crea los controles interactivos."""
-        grupo = QGroupBox("Controles")
+        grupo = QGroupBox("Controles del Sistema")
         layout = QGridLayout()
-        layout.setSpacing(15)
+        layout.setSpacing(18)
+        layout.setColumnStretch(1, 1)
 
         # Botón iniciar/detener
         layout.addWidget(QLabel("Animación:"), 0, 0)
-        self.btn_iniciar = QPushButton("Iniciar")
+        self.btn_iniciar = QPushButton("▶ Iniciar")
         self.btn_iniciar.setCheckable(True)
-        layout.addWidget(self.btn_iniciar, 0, 1, 1, 2)
+        self.btn_iniciar.setMinimumWidth(100)
+        self.btn_iniciar.setStyleSheet("padding: 8px; font-weight: bold;")
+        layout.addWidget(self.btn_iniciar, 0, 1)
 
         # Slider de velocidad
         layout.addWidget(QLabel("Velocidad:"), 1, 0)
@@ -448,7 +451,7 @@ class SimulationTab(QWidget):
         self.slider_velocidad.setTickInterval(1)
         layout.addWidget(self.slider_velocidad, 1, 1)
         self.label_velocidad = QLabel("5x")
-        self.label_velocidad.setStyleSheet("color: #0078D4;")
+        self.label_velocidad.setStyleSheet("color: #0078D4; font-weight: bold; min-width: 40px;")
         layout.addWidget(self.label_velocidad, 1, 2)
 
         # Slider de paso
@@ -461,7 +464,7 @@ class SimulationTab(QWidget):
         self.slider_paso.setTickInterval(10)
         layout.addWidget(self.slider_paso, 2, 1)
         self.label_paso = QLabel("0.002 m")
-        self.label_paso.setStyleSheet("color: #0078D4;")
+        self.label_paso.setStyleSheet("color: #0078D4; font-weight: bold; min-width: 50px;")
         layout.addWidget(self.label_paso, 2, 2)
 
         # Slider de radio
@@ -474,16 +477,20 @@ class SimulationTab(QWidget):
         self.slider_radio.setTickInterval(10)
         layout.addWidget(self.slider_radio, 3, 1)
         self.label_radio = QLabel("0.05 m")
-        self.label_radio.setStyleSheet("color: #0078D4;")
+        self.label_radio.setStyleSheet("color: #0078D4; font-weight: bold; min-width: 50px;")
         layout.addWidget(self.label_radio, 3, 2)
 
         # Checkbox oscilador
         self.chk_oscilador = QCheckBox("Mostrar oscilador")
         self.chk_oscilador.setChecked(True)
-        layout.addWidget(self.chk_oscilador, 4, 0, 1, 2)
+        self.chk_oscilador.setStyleSheet("font-weight: bold; padding: 5px;")
+        layout.addWidget(self.chk_oscilador, 4, 0, 1, 3)
         
-        # Separator
-        layout.addWidget(QLabel(""), 5, 0)
+        # Separator línea
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setStyleSheet("background-color: #CCCCCC; margin: 10px 0;")
+        layout.addWidget(sep, 5, 0, 1, 3)
         
         # Parámetros del oscilador
         layout.addWidget(QLabel("Masa (m):"), 6, 0)
@@ -495,7 +502,7 @@ class SimulationTab(QWidget):
         self.slider_masa.setTickInterval(10)
         layout.addWidget(self.slider_masa, 6, 1)
         self.label_masa = QLabel("1.0 kg")
-        self.label_masa.setStyleSheet("color: #0078D4;")
+        self.label_masa.setStyleSheet("color: #0078D4; font-weight: bold; min-width: 50px;")
         layout.addWidget(self.label_masa, 6, 2)
         
         layout.addWidget(QLabel("Resorte (k):"), 7, 0)
@@ -507,7 +514,7 @@ class SimulationTab(QWidget):
         self.slider_k.setTickInterval(100)
         layout.addWidget(self.slider_k, 7, 1)
         self.label_k = QLabel("100 N/m")
-        self.label_k.setStyleSheet("color: #0078D4;")
+        self.label_k.setStyleSheet("color: #0078D4; font-weight: bold; min-width: 60px;")
         layout.addWidget(self.label_k, 7, 2)
         
         layout.addWidget(QLabel("Amortiguación (c):"), 8, 0)
@@ -519,7 +526,7 @@ class SimulationTab(QWidget):
         self.slider_amort.setTickInterval(10)
         layout.addWidget(self.slider_amort, 8, 1)
         self.label_amort = QLabel("1.0 Ns/m")
-        self.label_amort.setStyleSheet("color: #0078D4;")
+        self.label_amort.setStyleSheet("color: #0078D4; font-weight: bold; min-width: 60px;")
         layout.addWidget(self.label_amort, 8, 2)
 
         grupo.setLayout(layout)

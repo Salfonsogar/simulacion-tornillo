@@ -229,49 +229,55 @@ class CalculatorTab(QWidget):
     def _actualizar_dcl(self, f_entrada, f_salida, radio, vm):
         """Actualiza el DCL con nuevos valores."""
         self.ax_dcl.clear()
-        self.ax_dcl.set_xlim(-2.5, 2.5)
-        self.ax_dcl.set_ylim(-1.5, 2.5)
+        self.ax_dcl.set_xlim(-2.8, 2.8)
+        self.ax_dcl.set_ylim(-2.0, 2.8)
         self.ax_dcl.set_aspect('equal')
         self.ax_dcl.axis('off')
         
-        self.ax_dcl.set_title('DCL - Fuerzas sobre el Tornillo', color='#0078D4', fontsize=12)
+        self.ax_dcl.set_title('DCL - Diagrama de Cuerpo Libre', color='#0078D4', fontsize=13, fontweight='bold')
+        self.ax_dcl.title.set_position((0.5, 1.02))
         
         r_engrane = 0.5
         theta = np.linspace(0, 2*np.pi, 20)
         x_engrane = r_engrane * np.cos(theta)
         y_engrane = r_engrane * np.sin(theta)
-        self.ax_dcl.fill(x_engrane, y_engrane, color='#CCCCCC', edgecolor='#666666', linewidth=2, alpha=0.5)
+        self.ax_dcl.fill(x_engrane, y_engrane, color='#E8E8E8', edgecolor='#666666', linewidth=2, alpha=0.7)
         
         for i in range(8):
             angle = i * np.pi / 4
-            x_diente = (r_engrane + 0.1) * np.cos(angle)
-            y_diente = (r_engrane + 0.1) * np.sin(angle)
+            x_diente = (r_engrane + 0.12) * np.cos(angle)
+            y_diente = (r_engrane + 0.12) * np.sin(angle)
             self.ax_dcl.plot([r_engrane * np.cos(angle), x_diente], [r_engrane * np.sin(angle), y_diente], 
-                         color='#666666', linewidth=2)
+                         color='#555555', linewidth=2)
         
         f_arrow_len = min(1.5, max(0.3, f_entrada / 20))
         self.ax_dcl.annotate('', xy=(-r_engrane - f_arrow_len, 0), xytext=(-r_engrane, 0),
-                         arrowprops=dict(arrowstyle='->', color='#0078D4', lw=3))
-        self.ax_dcl.text(-r_engrane - f_arrow_len - 0.3, -0.2, 'F_entrada', color='#0078D4', fontsize=10, fontweight='bold')
+                         arrowprops=dict(arrowstyle='->', color='#0078D4', lw=4))
+        self.ax_dcl.text(-r_engrane - f_arrow_len - 0.5, -0.25, 'F_entrada', color='#0078D4', fontsize=11, fontweight='bold')
         
-        fs_arrow_len = min(1.8, max(0.3, f_salida / 200))
+        fs_arrow_len = min(2.0, max(0.3, f_salida / 200))
         self.ax_dcl.annotate('', xy=(0, r_engrane + fs_arrow_len), xytext=(0, r_engrane),
-                       arrowprops=dict(arrowstyle='->', color='#28A745', lw=3))
-        self.ax_dcl.text(0.2, r_engrane + fs_arrow_len, 'F_salida', color='#28A745', fontsize=10, fontweight='bold')
+                       arrowprops=dict(arrowstyle='->', color='#28A745', lw=4))
+        self.ax_dcl.text(0.25, r_engrane + fs_arrow_len + 0.1, 'F_salida', color='#28A745', fontsize=11, fontweight='bold')
         
         theta_arrow = np.linspace(0, np.pi/2, 15)
-        x_arc = 0.7 * np.cos(theta_arrow)
-        y_arc = 0.7 * np.sin(theta_arrow)
-        self.ax_dcl.plot(x_arc, y_arc, color='#FF6B00', lw=2)
+        x_arc = 0.75 * np.cos(theta_arrow)
+        y_arc = 0.75 * np.sin(theta_arrow)
+        self.ax_dcl.plot(x_arc, y_arc, color='#FF6B00', lw=2.5)
         torque = f_entrada * radio
-        self.ax_dcl.annotate('', xy=(0.5 * np.cos(np.pi/4), 0.5 * np.sin(np.pi/4)), xytext=(0.6, 0.3),
-                         arrowprops=dict(arrowstyle='->', color='#FF6B00', lw=2))
-        self.ax_dcl.text(0.55, 0.65, 'τ', color='#FF6B00', fontsize=12, fontweight='bold')
+        self.ax_dcl.annotate('', xy=(0.55 * np.cos(np.pi/4), 0.55 * np.sin(np.pi/4)), xytext=(0.65, 0.35),
+                         arrowprops=dict(arrowstyle='->', color='#FF6B00', lw=2.5))
+        self.ax_dcl.text(0.6, 0.7, 'τ', color='#FF6B00', fontsize=14, fontweight='bold')
         
-        self.ax_dcl.text(-2.3, -1.0, f'F_in: {f_entrada:.1f}N', color='#0078D4', fontsize=9)
-        self.ax_dcl.text(-2.3, -1.2, f'F_out: {f_salida:.1f}N', color='#28A745', fontsize=9)
-        self.ax_dcl.text(-2.3, -1.4, f'τ: {torque:.3f}Nm', color='#FF6B00', fontsize=9)
-        self.ax_dcl.text(-2.3, -1.6, f'VM: {vm:.2f}', color='#0078D4', fontsize=9, fontstyle='italic')
+        bbox_props = dict(boxstyle='round,pad=0.5', facecolor='#F5F5F5', edgecolor='#CCCCCC', alpha=0.95)
+        self.ax_dcl.text(-2.5, -1.7, f'F_in: {f_entrada:.1f}N', color='#0078D4', fontsize=10, 
+                      fontweight='bold', bbox=bbox_props, ha='center')
+        self.ax_dcl.text(0, -1.7, f'F_out: {f_salida:.1f}N', color='#28A745', fontsize=10, 
+                      fontweight='bold', bbox=bbox_props, ha='center')
+        self.ax_dcl.text(2.5, -1.7, f'τ: {torque:.3f}Nm', color='#FF6B00', fontsize=10, 
+                      fontweight='bold', bbox=bbox_props, ha='center')
+        self.ax_dcl.text(0, -1.9, f'VM: {vm:.2f}x', color='#333333', fontsize=11, 
+                      fontweight='bold', fontstyle='italic', ha='center')
         
         self.canvas_dcl.draw()
 

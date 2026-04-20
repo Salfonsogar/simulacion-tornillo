@@ -223,6 +223,7 @@ class CalculatorTab(QWidget):
         self.ax_dcl.text(-2.3, -1.0, 'F_in: 10N', color='#0078D4', fontsize=9)
         self.ax_dcl.text(-2.3, -1.2, 'F_out: 157N', color='#28A745', fontsize=9)
         self.ax_dcl.text(-2.3, -1.4, 'τ: 0.5Nm', color='#FF6B00', fontsize=9)
+        self.ax_dcl.text(-2.3, -1.6, 'VM: 15.71x', color='#333333', fontsize=9, fontstyle='italic')
         
         self.canvas_dcl.draw()
 

@@ -279,6 +279,128 @@ class ScrewCalculator:
         }
 
 
+class InverseScrewCalculator:
+    """
+    Calculadora inversa del tornillo.
+
+   给定 F_salida necesaria y F_entrada máxima disponible,
+    calcula los parámetros necesarios o verifica si es posible.
+
+    Esto es útil para el "Modo Reto" donde el estudiante debe
+    encontrar los parámetros correctos para mover una carga.
+    """
+
+    @staticmethod
+    def calcular_radio_minimo(f_entrada: float, f_salida: float, paso: float) -> float:
+        """
+        Calcula el radio mínimo necesario para lograr F_salida.
+
+        De la fórmula: VM = F_salida / F_entrada = (2πr) / L
+        Despejamos: r = (F_salida × L) / (F_entrada × 2π)
+
+        Args:
+            f_entrada: Fuerza de entrada máxima disponible
+            f_salida: Fuerza de salida necesaria
+            paso: Paso de rosca
+
+        Returns:
+            Radio mínimo necesario
+
+        Raises:
+            ScrewPhysicsError: Si es físicamente imposible
+        """
+        vm_necesaria = f_salida / f_entrada
+        if vm_necesaria <= 0:
+            raise ScrewPhysicsError("[CRITICAL ERROR] F_salida y F_entrada deben ser positivas")
+
+        radio_min = (vm_necesaria * paso) / (2.0 * math.pi)
+
+        if radio_min > ScrewLimits.RADIO_MAX:
+            raise ScrewPhysicsError(
+                f"[CRITICAL ERROR] Radio necesario ({radio_min:.3f}m) excede el límite de "
+                f"ingeniería ({ScrewLimits.RADIO_MAX}m). Usa mayor F_entrada o menor paso."
+            )
+
+        if radio_min < ScrewLimits.RADIO_MIN:
+            raise ScrewPhysicsError(
+                f"[CRITICAL ERROR] Radio necesario ({radio_min:.4f}m) muy pequeño. "
+                f"Aumenta F_entrada."
+            )
+
+        return radio_min
+
+    @staticmethod
+    def calcular_paso_maximo(f_entrada: float, f_salida: float, radio: float) -> float:
+        """
+        Calcula el paso máximo posible para lograr F_salida.
+
+        De la fórmula: VM = F_salida / F_entrada = (2πr) / L
+        Despejamos: L = (2πr × F_entrada) / F_salida
+
+        Args:
+            f_entrada: Fuerza de entrada máxima disponible
+            f_salida: Fuerza de salida necesaria
+            radio: Radio de giro
+
+        Returns:
+            Paso máximo posible
+
+        Raises:
+            ScrewPhysicsError: Si es físicamente imposible
+        """
+        vm_necesaria = f_salida / f_entrada
+        if vm_necesaria <= 0:
+            raise ScrewPhysicsError("[CRITICAL ERROR] F_salida y F_entrada deben ser positivas")
+
+        paso_max = (2.0 * math.pi * radio) / vm_necesaria
+
+        if paso_max > ScrewLimits.PASO_MAX:
+            raise ScrewPhysicsError(
+                f"[CRITICAL ERROR] Paso necesario ({paso_max:.4f}m) excede el límite ({ScrewLimits.PASO_MAX}m)"
+            )
+
+        if paso_max < ScrewLimits.PASO_MIN:
+            raise ScrewPhysicsError(
+                f"[CRITICAL ERROR] Paso necesario ({paso_max:.5f}m) muy pequeño. "
+                f"Aumenta el radio o usa mayor F_entrada."
+            )
+
+        return paso_max
+
+    @staticmethod
+    def verificar_diseño(f_entrada: float, radio: float, paso: float, f_salida_necesaria: float) -> Tuple[bool, str, dict]:
+        """
+        Verifica si un diseño given puede lograr la F_salida necesaria.
+
+        Args:
+            f_entrada: Fuerza de entrada disponible
+            radio: Radio propuesto
+            paso: Paso propuesto
+            f_salida_necesaria: Fuerza de salida requerida
+
+        Returns:
+            Tupla (es_posible, mensaje, resultados)
+        """
+        try:
+            vm = ScrewCalculator.calcular_vm(radio, paso)
+            f_salida_logro = ScrewCalculator.calcular_f_salida(f_entrada, vm)
+
+            resultado = {
+                'vm': vm,
+                'f_salida': f_salida_logro,
+                'f_salida_necesaria': f_salida_necesaria,
+                'diferencia': f_salida_logro - f_salida_necesaria
+            }
+
+            if f_salida_logro >= f_salida_necesaria:
+                return True, f"✓ ÉXITO: F_salida={f_salida_logro:.1f}N ≥ objetivo={f_salida_necesaria:.1f}N", resultado
+            else:
+                return False, f"✗ INSUFICIENTE: F_salida={f_salida_logro:.1f}N < objetivo={f_salida_necesaria:.1f}N", resultado
+
+        except ScrewPhysicsError as e:
+            return False, str(e), {}
+
+
 class OscillatorSimulation:
     """
     Simulación del oscilador amortiguado de segundo orden.

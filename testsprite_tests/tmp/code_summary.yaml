@@ -1,0 +1,70 @@
+version: "2"
+type: frontend
+tech_stack:
+  - Python 3.9+
+  - PyQt6
+  - NumPy
+  - Matplotlib
+routes:
+  - path: /
+    file: main.py
+    auth_required: false
+    description: Main entry point
+  - path: /calculator
+    file: gui/calculator_tab.py
+    auth_required: false
+    description: Calculator tab
+  - path: /simulation
+    file: gui/simulation/simulation_tab.py
+    auth_required: false
+    description: Simulation tab with animation
+  - path: /crypto
+    file: gui/crypto_tab.py
+    auth_required: false
+    description: Cryptography tab
+features:
+  - name: Physics Simulation
+    description: Simulate screw as damped harmonic oscillator using RK4
+    files:
+      - physics/screw_model.py
+      - physics/rk4_integrator.py
+    entry_route: /simulation
+    user_interactions:
+      - Adjust mass slider
+      - Adjust damping slider
+      - Adjust spring constant slider
+      - Click Start/Stop button
+      - Click Reset button
+      - Watch animation
+      - Observe y(t) graph
+    api_calls: []
+    auth_required: false
+  - name: VM Calculator
+    description: Calculate mechanical advantage of screw
+    files:
+      - physics/screw_calculator.py
+      - controller/calculator_controller.py
+    entry_route: /calculator
+    user_interactions:
+      - Enter radio value
+      - Enter pitch value
+      - Click Calculate VM
+      - View result
+    api_calls: []
+    auth_required: false
+  - name: Cryptography
+    description: Encrypt/decrypt data using screw VM as key
+    files:
+      - crypto/screw_crypto.py
+      - controller/crypto_controller.py
+    entry_route: /crypto
+    user_interactions:
+      - Enter radio and pitch
+      - Select number of turns
+      - Enter text to encrypt
+      - Click Encrypt
+      - Click Decrypt
+      - View output
+    api_calls: []
+    auth_required: false
+known_limitations: []

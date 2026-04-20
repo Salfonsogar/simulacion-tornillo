@@ -19,7 +19,7 @@ import math
 
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                             QLabel, QPushButton, QSlider, QGroupBox,
-                            QCheckBox, QSizePolicy, QFrame)
+                            QCheckBox, QSizePolicy, QFrame, QScrollArea)
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor
 
@@ -120,45 +120,67 @@ class SimulationTab(QWidget):
             }
         """)
 
+        # Scroll area para pantallas pequeñas
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        
+        container = QWidget()
         layout_principal = QVBoxLayout()
-        layout_principal.setSpacing(15)
-        layout_principal.setContentsMargins(20, 20, 20, 20)
+        layout_principal.setSpacing(8)
+        layout_principal.setContentsMargins(8, 8, 8, 8)
 
-        # Layout de canvases (2 columnas)
+        # Layout de canvases - horizontal (lado a lado)
         layout_canvas = QHBoxLayout()
-        layout_canvas.setSpacing(15)
+        layout_canvas.setSpacing(8)
 
-        # Canvas de animación del tornillo
+        # Canvas de animación del tornillo - horizontal
         self.canvas_tornillo_group = self._crear_canvas_tornillo()
-        layout_canvas.addWidget(self.canvas_tornillo_group)
+        self.canvas_tornillo_group.setMinimumHeight(200)
+        layout_canvas.addWidget(self.canvas_tornillo_group, 1)
 
-        # Canvas del oscilador
+        # Canvas del oscilador - horizontal
         self.canvas_oscilador_group = self._crear_canvas_oscilador()
-        layout_canvas.addWidget(self.canvas_oscilador_group)
+        self.canvas_oscilador_group.setMinimumHeight(200)
+        layout_canvas.addWidget(self.canvas_oscilador_group, 1)
 
         layout_principal.addLayout(layout_canvas)
 
-        # Panel de valores derivados
-        panel_valores = self._crear_panel_valores()
-        layout_principal.addWidget(panel_valores)
+        # Panel de valores derivados - colapsable
+        self.btn_valores = QPushButton("Valores (+)")
+        self.btn_valores.setCheckable(True)
+        self.btn_valores.setChecked(False)
+        self.btn_valores.clicked.connect(self._toggle_valores)
+        layout_principal.addWidget(self.btn_valores)
+        
+        self.panel_valores = self._crear_panel_valores()
+        self.panel_valores.hide()
+        layout_principal.addWidget(self.panel_valores)
 
         # Botón mostrar/ocultar controles
-        self.btn_mostrar_controles = QPushButton("Ocultar Controles")
+        self.btn_mostrar_controles = QPushButton("Controles (+)")
         self.btn_mostrar_controles.setCheckable(True)
-        self.btn_mostrar_controles.setChecked(True)
+        self.btn_mostrar_controles.setChecked(False)
         self.btn_mostrar_controles.clicked.connect(self._toggle_controles)
         layout_principal.addWidget(self.btn_mostrar_controles)
 
-        # Controles (inicialmente visibles)
+        # Controles
         self.controles_widget = self._crear_controles()
+        self.controles_widget.hide()
         layout_principal.addWidget(self.controles_widget)
 
         # Info del estado
         self.label_estado = QLabel("Estado: Detenido")
-        self.label_estado.setStyleSheet("color: #E65100;")
+        self.label_estado.setStyleSheet("color: #E65100; font-size: 11px;")
         layout_principal.addWidget(self.label_estado)
 
-        self.setLayout(layout_principal)
+        container.setLayout(layout_principal)
+        scroll.setWidget(container)
+        
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(scroll)
+        self.setLayout(main_layout)
 
     def _crear_panel_valores(self) -> QWidget:
         """Crea el panel de valores derivados."""
@@ -250,7 +272,7 @@ class SimulationTab(QWidget):
 
         # Canvas
         self.canvas_tornillo_widget = FigureCanvasQTAgg(self.fig_tornillo)
-        self.canvas_tornillo_widget.setMinimumSize(400, 400)
+        self.canvas_tornillo_widget.setMinimumSize(280, 200)
         self.canvas_tornillo_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # Inicializar visualización
@@ -345,7 +367,7 @@ class SimulationTab(QWidget):
 
         # Canvas
         self.canvas_oscilador_widget = FigureCanvasQTAgg(self.fig_oscilador)
-        self.canvas_oscilador_widget.setMinimumSize(400, 400)
+        self.canvas_oscilador_widget.setMinimumSize(280, 200)
         self.canvas_oscilador_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # Inicializar gráfico
@@ -643,7 +665,17 @@ class SimulationTab(QWidget):
         if hasattr(self, 'controles_widget'):
             if checked:
                 self.controles_widget.show()
-                self.btn_mostrar_controles.setText("Ocultar Controles")
+                self.btn_mostrar_controles.setText("Controles (-)")
             else:
                 self.controles_widget.hide()
-                self.btn_mostrar_controles.setText("Mostrar Controles")
+                self.btn_mostrar_controles.setText("Controles (+)")
+
+    def _toggle_valores(self, checked):
+        """Muestra u oculta el panel de valores."""
+        if hasattr(self, 'panel_valores'):
+            if checked:
+                self.panel_valores.show()
+                self.btn_valores.setText("Valores (-)")
+            else:
+                self.panel_valores.hide()
+                self.btn_valores.setText("Valores (+)")

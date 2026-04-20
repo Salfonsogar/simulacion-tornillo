@@ -172,9 +172,9 @@ class ScrewCalculator:
         """
         return angulo * (paso / (2.0 * math.pi))
 
-@staticmethod
+    @staticmethod
     def validar_parametros(f_entrada: float, radio: float,
-                          paso: float, angulo: float = 360.0) -> Tuple[bool, Optional[str]]:
+                        paso: float, angulo: float = 360.0) -> Tuple[bool, Optional[str]]:
         """
         Valida los parámetros физические del tornillo.
 

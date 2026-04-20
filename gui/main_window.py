@@ -16,7 +16,7 @@ Fecha: 2026
 import sys
 
 from PyQt6.QtWidgets import (QMainWindow, QTabWidget, QMessageBox,
-                            QApplication, QLabel, QStatusBar, QSizePolicy)
+                            QApplication, QLabel, QStatusBar, QSizePolicy, QPushButton)
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QScreen, QIcon, QKeyEvent, QPixmap, QPainter, QColor
 
@@ -151,6 +151,14 @@ class ScrewSimulatorWindow(QMainWindow):
         """Configura la barra de estado."""
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
+        
+        self.btn_ayuda = QPushButton("?")
+        self.btn_ayuda.setFixedSize(30, 25)
+        self.btn_ayuda.setStyleSheet("background-color: #0078D4; color: white; border: none; border-radius: 4px; font-weight: bold;")
+        self.btn_ayuda.setToolTip("Ayuda del simulador")
+        self.btn_ayuda.clicked.connect(self._mostrar_ayuda)
+        self.status_bar.addPermanentWidget(self.btn_ayuda)
+        
         self.status_bar.showMessage("Listo. Ingrese valores en la Calculadora.")
 
     def _crear_icono(self, color: str, forma: str) -> QIcon:
@@ -205,21 +213,44 @@ class ScrewSimulatorWindow(QMainWindow):
         msg.setWindowTitle("Ayuda - Simulador de Tornillo")
         msg.setIcon(QMessageBox.Icon.Information)
         msg.setText(
-            "<h2>Simulador de Tornillo</h2>"
+            "<h2>🔩 Simulador de Tornillo</h2>"
             "<p>Aplicación educativa para el taller de Máquinas Simples.</p>"
-            "<h3>Controles:</h3>"
+            
+            "<h3>📐 Fórmulas Principales:</h3>"
             "<ul>"
-            "<li><b>F2</b>: Calculadora</li>"
-            "<li><b>F3</b>: Simulación</li>"
-            "<li><b>F4</b>: Criptografía</li>"
-            "<li><b>F1</b>: Esta ayuda</li>"
+            "<li><b>VM</b> = (2π × r) / L | Ventaja Mecánica</li>"
+            "<li><b>F_salida</b> = F_entrada × VM | Fuerza multiplicada</li>"
+            "<li><b>Δx</b> = θ × (L / 2π) | Avance lineal</li>"
             "</ul>"
-            "<h3>Fórmulas:</h3>"
+            
+            "<h3>🎮 Cómo Usar:</h3>"
+            "<ol>"
+            "<li><b>Calculadora</b>: Ingresa F_entrada, r, L → Ve VM, F_salida y el DCL</li>"
+            "<li><b>Simulación</b>: Ajusta masa/k/amortiguación → Observa oscilador dinámico</li>"
+            "<li><b>Criptografía</b>: Cifra/descifra → Resuelve los desafíos!</li>"
+            "</ol>"
+            
+            "<h3>⌨️ Atajos:</h3>"
             "<ul>"
-            "<li>VM = (2πr) / L</li>"
-            "<li>F_salida = F_entrada × VM</li>"
-            "<li>Δx = θ × (L / 2π)</li>"
+            "<li><b>Ctrl+1</b>: Calculadora</li>"
+            "<li><b>Ctrl+2</b>: Simulación</li>"
+            "<li><b>Ctrl+3</b>: Criptografía</li>"
             "</ul>"
+            
+            "<h3>💡 Glosario:</h3>"
+            "<ul>"
+            "<li><b>VM</b>: Ventaja Mecánica - veces que se multiplica la fuerza</li>"
+            "<li><b>r</b>: Radio del brazo de giro</li>"
+            "<li><b>L</b>: Paso de rosca (avance por vuelta)</li>"
+            "<li><b>DCL</b>: Diagrama de Cuerpo Libre</li>"
+            "<li><b>oscilador</b>: Sistema que muestra estabilidad dinámica y(t)</li>"
+            "</ul>"
+        )
+        msg.setDetailedText(
+            "Ejemplo numérico:\n"
+            "F_entrada = 10N, r = 0.05m, L = 0.002m\n"
+            "VM = (2π × 0.05) / 0.002 = 157.08\n"
+            "F_salida = 10 × 157.08 = 1570.8N"
         )
         msg.exec()
 

@@ -163,6 +163,7 @@ class CalculatorTab(QWidget):
     def _crear_panel_dcl(self) -> QGroupBox:
         """Crea el panel de Diagrama de Cuerpo Libre (DCL)."""
         grupo = QGroupBox("Diagrama de Cuerpo Libre (DCL)")
+        grupo.setToolTip("DCL: Diagrama que muestra todas las fuerzas actúan sobre el cuerpo.\n📐 Flecha azul: F_entrada | Flecha verde: F_salida | Arco naranja: Torque")
         layout = QVBoxLayout()
         
         self.fig_dcl = Figure(figsize=(5, 3), facecolor='#FFFFFF')
@@ -284,7 +285,7 @@ class CalculatorTab(QWidget):
         layout.addWidget(QLabel("Fuerza de Entrada (F_entrada):"), 0, 0)
         self.input_fuerza = QLineEdit()
         self.input_fuerza.setPlaceholderText("Ej: 10.0")
-        self.input_fuerza.setToolTip("Fuerza aplicada en Newtons (N)")
+        self.input_fuerza.setToolTip("Fuerza aplicada en Newtons (N).\n💡 F_entrada es la fuerza que aplicas manualmente al tornillo.")
         layout.addWidget(self.input_fuerza, 0, 1)
         layout.addWidget(QLabel("N"), 0, 2)
 
@@ -292,7 +293,7 @@ class CalculatorTab(QWidget):
         layout.addWidget(QLabel("Radio del Brazo (r):"), 1, 0)
         self.input_radio = QLineEdit()
         self.input_radio.setPlaceholderText("Ej: 0.05")
-        self.input_radio.setToolTip("Radio de giro en metros (m)")
+        self.input_radio.setToolTip("Radio de giro en metros (m).\n💡 Distancia desde el centro hasta donde se aplica la fuerza.")
         layout.addWidget(self.input_radio, 1, 1)
         layout.addWidget(QLabel("m"), 1, 2)
 
@@ -300,7 +301,7 @@ class CalculatorTab(QWidget):
         layout.addWidget(QLabel("Paso de Rosca (L):"), 2, 0)
         self.input_paso = QLineEdit()
         self.input_paso.setPlaceholderText("Ej: 0.002")
-        self.input_paso.setToolTip("Paso de la rosca en metros (m)")
+        self.input_paso.setToolTip("Paso de la rosca en metros (m).\n💡 Distancia que avanza el tornillo por cada vuelta completa.")
         layout.addWidget(self.input_paso, 2, 1)
         layout.addWidget(QLabel("m"), 2, 2)
 
@@ -308,7 +309,7 @@ class CalculatorTab(QWidget):
         layout.addWidget(QLabel("Ángulo de Rotación:"), 3, 0)
         self.input_angulo = QLineEdit()
         self.input_angulo.setPlaceholderText("360 (opcional)")
-        self.input_angulo.setToolTip("Ángulo de rotación en grados")
+        self.input_angulo.setToolTip("Ángulo de rotación en grados.\n💡 360° = 1 vuelta completa.")
         layout.addWidget(self.input_angulo, 3, 1)
         layout.addWidget(QLabel("°"), 3, 2)
 
@@ -325,18 +326,21 @@ class CalculatorTab(QWidget):
         layout.addWidget(QLabel("Ventaja Mecánica (VM):"), 0, 0)
         self.label_vm = QLabel("—")
         self.label_vm.setObjectName("resultado")
+        self.label_vm.setToolTip("Ventaja Mecánica: número de veces que se multiplica la fuerza.\n📐 VM = 2πr / L")
         layout.addWidget(self.label_vm, 0, 1)
 
         # Fuerza de salida
         layout.addWidget(QLabel("Fuerza de Salida (F_salida):"), 1, 0)
         self.label_f_salida = QLabel("—")
         self.label_f_salida.setObjectName("resultado")
+        self.label_f_salida.setToolTip("Fuerza resultante después del tornillo.\n📐 F_salida = F_entrada × VM")
         layout.addWidget(self.label_f_salida, 1, 1)
 
         # Desplazamiento
         layout.addWidget(QLabel("Desplazamiento Lineal (Δx):"), 2, 0)
         self.label_desplazamiento = QLabel("—")
         self.label_desplazamiento.setObjectName("resultado")
+        self.label_desplazamiento.setToolTip("Distancia que avanza el tornillo.\n📐 Δx = θ × (L / 2π)")
         layout.addWidget(self.label_desplazamiento, 2, 1)
 
         # Mensaje de estado

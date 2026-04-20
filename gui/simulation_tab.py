@@ -163,37 +163,44 @@ class SimulationTab(QWidget):
     def _crear_panel_valores(self) -> QWidget:
         """Crea el panel de valores derivados."""
         grupo = QGroupBox("Valores Derivados")
+        grupo.setToolTip("Valores calculados automáticamente desde los parámetros del tornillo.\n📐 F_motor = F_entrada × VM")
         layout = QGridLayout()
         layout.setSpacing(10)
         
         layout.addWidget(QLabel("F_entrada:"), 0, 0)
         self._label_f_entrada = QLabel("10.0 N")
         self._label_f_entrada.setStyleSheet("color: #0078D4; font-weight: bold;")
+        self._label_f_entrada.setToolTip("Fuerza de entrada actual.")
         layout.addWidget(self._label_f_entrada, 0, 1)
         
         layout.addWidget(QLabel("VM:"), 0, 2)
         self._label_vm = QLabel("15.71")
         self._label_vm.setStyleSheet("color: #0078D4; font-weight: bold;")
+        self._label_vm.setToolTip("Ventaja Mecánica: VM = 2πr / L")
         layout.addWidget(self._label_vm, 0, 3)
         
         layout.addWidget(QLabel("F_motor:"), 1, 0)
         self._label_f_motor = QLabel("157.1 N")
         self._label_f_motor.setStyleSheet("color: #28A745; font-weight: bold; font-size: 14px;")
+        self._label_f_motor.setToolTip("Fuerza resultantes después del tornillo.\n📐 F_motor = F_entrada × VM")
         layout.addWidget(self._label_f_motor, 1, 1)
         
         layout.addWidget(QLabel("γ (amort.):"), 1, 2)
         self._label_gamma = QLabel("0.50")
         self._label_gamma.setStyleSheet("color: #FF6B00;")
+        self._label_gamma.setToolTip("Factor de amortiguación: γ = c / (2m)")
         layout.addWidget(self._label_gamma, 1, 3)
         
         layout.addWidget(QLabel("ω (frec.):"), 2, 0)
         self._label_omega = QLabel("3.16 rad/s")
         self._label_omega.setStyleSheet("color: #0078D4;")
+        self._label_omega.setToolTip("Frecuencia natural: ω = √(k/m - γ²)")
         layout.addWidget(self._label_omega, 2, 1)
         
         layout.addWidget(QLabel("k_equiv:"), 2, 2)
         self._label_k = QLabel("157.1 N/m")
         self._label_k.setStyleSheet("color: #0078D4;")
+        self._label_k.setToolTip("Constante elástica equivalente.")
         layout.addWidget(self._label_k, 2, 3)
         
         self._actualizar_panel_valores()

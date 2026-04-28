@@ -76,13 +76,6 @@ class CalculatorTab(QWidget):
             lbl = QLabel(text)
             lbl.setStyleSheet(f"color: {c['text']}; font-weight: 500;")
             return lbl
-
-        g_layout.addWidget(create_label("Masa (m):"), 0, 0)
-        self._input_masa = QLineEdit("1.0")
-        self._input_masa.setMinimumHeight(35)
-        self._input_masa.setStyleSheet(f"border: 1px solid {c['border']}; border-radius: 4px; padding: 5px;")
-        g_layout.addWidget(self._input_masa, 0, 1)
-        g_layout.addWidget(QLabel("kg"), 0, 2)
         
         g_layout.addWidget(create_label("Radio (r):"), 1, 0)
         self._input_radio = QLineEdit("0.05")
